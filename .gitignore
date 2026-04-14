@@ -1,0 +1,57 @@
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+### --- ADIÇÕES DE SEGURANÇA E SISTEMA --- ###
+
+# Arquivos de Sistema Operacional (Mac e Windows)
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+$RECYCLE.BIN/
+
+# Logs gerados pelo Spring Boot ou Java
+*.log
+logs/
+
+# Arquivos de Ambiente (MUITO IMPORTANTE: Impede o vazamento de senhas)
+.env
+.env.*
+application-local.properties
+application-dev.yml
+
+# Arquivos temporários e de crash do Java
+hs_err_pid*
+replay_pid*
