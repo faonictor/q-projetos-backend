@@ -46,7 +46,7 @@ Para rodar este projeto no seu computador, certifique-se de ter as seguintes fer
 
 **1. Clone o repositório**
 ```bash
-git clone [https://github.com/faonictor/q-projetos-backend.git](https://github.com/faonictor/q-projetos-backend.git)
+git clone https://github.com/faonictor/q-projetos-backend.git
 cd q-projetos-backend
 ```
 
