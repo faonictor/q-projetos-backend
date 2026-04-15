@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
  * @Table: Permite personalizar o nome da tabela no MySQL. 
  * Sem isto, a tabela chamar-se-ia "projeto". O prefixo "tb_" é uma boa prática.
  */
-@Table(name = "tb_projetos")
+@Table(name = "projetos")
 /**
  * @Data: É a "magia" do Lombok. Ele cria invisivelmente todos os métodos 
  * Getters (ex: getNome()), Setters (ex: setNome()), toString(), equals() e hashCode().
