@@ -96,6 +96,67 @@ Abaixo estão as rotas base já disponíveis para consumo do Front-end. A URL ba
 ---
 
 ### 👨‍💻 Contribuição
-Mantenha os commits claros e descritivos. Sempre puxe as atualizações (`git pull`) da branch `main` antes de iniciar uma nova funcionalidade para evitar conflitos.
+
+#### 1. O Padrão de Commits
+Nós utilizamos o padrão *Conventional Commits* para manter o histórico claro. Todo commit deve começar com um prefixo que explica o que foi feito:
+
+* **`feat:` (Feature)** -> Use quando estiver a criar algo **novo**.
+	  * *Exemplo:* `git commit -m "feat: cria endpoint para cadastro de usuários"`
+	
+* **`fix:` (Fix)** -> Use quando estiver a **consertar** um bug ou erro em algo que já existia.
+	  * *Exemplo:* `git commit -m "fix: corrige erro de formatação na data do projeto"`
+	
+* `refactor:` para melhorar um código sem mudar a sua função).
+	* *Exemplo:* `git commit -m "refactor: ajuste função service cadastrar"`
+
+---
+#### 2. Passo a Passo do Desenvolvedor
+Siga **exatamente** esta ordem toda vez que for iniciar um trabalho novo:
+
+#### PASSO A: Atualize a sua máquina (Antes de começar)
+Nunca comece a programar sem antes garantir que tem a versão mais recente do projeto. A nossa branch principal de trabalho é a `development`.
+
+```bash
+# 1. Vá para a branch development
+git switch development
+
+# 2. Vá para a branch development
+git branch
+
+# 2. Puxe as atualizações mais recentes da nuvem
+git pull origin development
+````
+
+#### PASSO B: Crie a sua própria branch
+Nunca programe diretamente na `development` ou na `main`. Crie uma branch isolada para a sua tarefa.
+
+```bash
+# O comando -b cria a branch e já muda para ela.
+# Use um nome curto e sem espaços (ex: feature/cadastro-usuario ou fix/rota-delete)
+#Exemplo comando:
+
+git switch -c nome-da-sua-branch-aqui
+```
+
+#### PASSO C: Trabalhe e faça Commits
+Escreva o seu código, salve os arquivos e adicione-os ao Git.
+
+```Bash
+# 1. Checa quais arquivos estão prontos pro commit
+git status
+
+# 2. Adicione os arquivos alterados
+git add .
+
+# 3. Crie o commit com o prefixo correto
+git commit -m "feat: adiciona nova funcionalidade X"
+```
+
+#### PASSO D: Finalize e envie para a Nuvem
+Quando a sua tarefa estiver pronta e testada, é hora de enviar a sua branch para o GitHub.
+
+```Bash
+git push origin nome-da-sua-branch-aqui
+```
 
 ***Desenvolvido com dedicação pela equipe do IFPE - Afogados da Ingazeira.***
