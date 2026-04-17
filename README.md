@@ -158,5 +158,38 @@ Quando a sua tarefa estiver pronta e testada, é hora de enviar a sua branch par
 ```Bash
 git push origin nome-da-sua-branch-aqui
 ```
+---
+
+### 🖥️ Alternativa: Usando o GitHub Desktop (Interface Gráfica)
+
+Se você não se sente confortável com o terminal, não há problema! Pode fazer exatamente o mesmo fluxo usando o **GitHub Desktop**. As regras de commits (`feat:`, `fix:`) continuam as mesmas.
+
+Siga estes passos visuais:
+
+#### PASSO A: Atualize a sua máquina
+1. Abra o GitHub Desktop e certifique-se de que o repositório `q-projetos-backend` está selecionado no canto superior esquerdo (**Current repository**).
+2. Clique na aba do meio, chamada **Current branch**, e selecione a branch `development`.
+3. Clique no botão **Fetch origin** (no canto superior direito). Se houver atualizações, o botão mudará para **Pull origin**. Clique nele para baixar o código mais recente.
+
+#### PASSO B: Crie a sua própria branch
+1. Com a branch `development` selecionada, clique novamente em **Current branch** e depois no botão **New branch**.
+2. Digite o nome da sua branch (ex: `feature/tela-login` ou `fix/botao-salvar`).
+3. O aplicativo perguntará em qual branch você quer se basear. Escolha a **development** e clique em **Create branch**.
+
+#### PASSO C: Trabalhe e faça Commits
+1. Vá para a sua IDE (VS Code/IntelliJ), faça o seu trabalho e salve os arquivos.
+2. Volte ao GitHub Desktop. Você verá todos os arquivos que alterou listados no painel esquerdo.
+3. No canto inferior esquerdo, há um campo chamado **Summary** (Resumo). Digite o seu commit lá, lembrando-se de usar o prefixo: `feat: adiciona nova funcionalidade X`.
+4. Clique no botão azul **Commit to [nome-da-sua-branch]**.
+
+#### PASSO D: Finalize e envie para a Nuvem
+1. No topo da tela, clique no botão azul **Publish branch** (se for a primeira vez) ou **Push origin**.
+2. Isso enviará o seu código em segurança para o GitHub.
+
+#### PASSO E: O Pull Request (PR)
+1. Após fazer o *Push*, o GitHub Desktop mostrará um botão azul chamado **Create Pull Request**.
+2. Ao clicar nele, o seu navegador vai abrir diretamente na página do GitHub.
+3. Confirme se a base está apontando para a `development`, adicione uma descrição e clique em **Create pull request**.
+
 
 ***Desenvolvido com dedicação pela equipe do IFPE - Afogados da Ingazeira.***
