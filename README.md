@@ -158,6 +158,7 @@ Quando a sua tarefa estiver pronta e testada, é hora de enviar a sua branch par
 ```Bash
 git push origin nome-da-sua-branch-aqui
 ```
+
 ---
 
 ### 🖥️ Alternativa: Usando o GitHub Desktop (Interface Gráfica)
