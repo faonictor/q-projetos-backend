@@ -1,7 +1,7 @@
 package br.edu.ifpe.q_projetos.service;
 
-import br.edu.ifpe.q_projetos.model.Projeto;
-import br.edu.ifpe.q_projetos.repository.ProjetoRepository;
+import br.edu.ifpe.q_projetos.model._Projeto;
+import br.edu.ifpe.q_projetos.repository._ProjetoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +14,7 @@ import java.util.Optional;
  * que as regras do IFPE sejam cumpridas antes de mexer no banco de dados.
  */
 @Service
-public class ProjetoService {
+public class _ProjetoService {
 
     /**
      * @Autowired: Injeção de Dependência.
@@ -22,12 +22,12 @@ public class ProjetoService {
      * de criar a ligação com o banco e entregar a ferramenta pronta a usar aqui.
      */
     @Autowired
-    private ProjetoRepository repository;
+    private _ProjetoRepository repository;
 
     /**
      * Retorna a lista completa de projetos para alimentar a vitrine do Front-end.
      */
-    public List<Projeto> listarTodos() {
+    public List<_Projeto> listarTodos() {
         return repository.findAll();
     }
 
@@ -36,14 +36,14 @@ public class ProjetoService {
      * Retorna um "Optional", que é a forma segura do Java dizer: 
      * "Pode ser que eu encontre o projeto, pode ser que não (se o ID não existir)".
      */
-    public Optional<Projeto> buscarPorId(Long id) {
+    public Optional<_Projeto> buscarPorId(Long id) {
         return repository.findById(id);
     }
 
     /**
      * Regra de Negócio principal: Salvar ou Atualizar um projeto.
      */
-    public Projeto salvar(Projeto projeto) {
+    public _Projeto salvar(_Projeto projeto) {
         
         // --- EXEMPLO DE REGRA DE NEGÓCIO ---
         // Se quisermos garantir que o nome do responsável fique sempre em Maiúsculas 
