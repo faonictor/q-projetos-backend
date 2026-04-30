@@ -36,7 +36,7 @@ import java.time.LocalDateTime;
  * Muito útil para testes unitários.
  */
 @AllArgsConstructor
-public class Projeto {
+public class _Projeto {
 
     /**
      * @Id: Define que este atributo é a Chave Primária (Primary Key) da tabela.

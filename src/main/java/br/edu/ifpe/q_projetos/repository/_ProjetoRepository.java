@@ -1,6 +1,6 @@
 package br.edu.ifpe.q_projetos.repository;
 
-import br.edu.ifpe.q_projetos.model.Projeto;
+import br.edu.ifpe.q_projetos.model._Projeto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
  * O Spring encarrega-se de o instanciar e gerir invisivelmente.
  */
 @Repository
-public interface ProjetoRepository extends JpaRepository<Projeto, Long> {
+public interface _ProjetoRepository extends JpaRepository<_Projeto, Long> {
 
     // Não precisamos de escrever NADA aqui dentro para ter o básico a funcionar!
     
