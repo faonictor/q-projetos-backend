@@ -55,3 +55,7 @@ application-dev.yml
 # Arquivos temporários e de crash do Java
 hs_err_pid*
 replay_pid*
+
+# Arquivos de configuração do Postman
+.postman/
+postman/
