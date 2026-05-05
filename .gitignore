@@ -41,6 +41,7 @@ build/
 Thumbs.db
 ehthumbs.db
 $RECYCLE.BIN/
+.editorconfig
 
 # Logs gerados pelo Spring Boot ou Java
 *.log
