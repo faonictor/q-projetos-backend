@@ -52,6 +52,7 @@ logs/
 .env.*
 application-local.properties
 application-dev.yml
+application-dev.properties
 
 # Arquivos temporários e de crash do Java
 hs_err_pid*
