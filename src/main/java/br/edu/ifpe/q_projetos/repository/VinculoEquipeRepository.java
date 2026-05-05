@@ -5,3 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface VinculoEquipeRepository extends JpaRepository<VinculoEquipe, Long> {
 }
+
+//ajuste de karen
