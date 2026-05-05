@@ -64,8 +64,12 @@ spring.datasource.password=sua_senha_local
 * **Via IDE:** Encontre o arquivo `QProjetosApplication.java` e clique em *Run*.
 * **Via Terminal:** Execute o comando:
 ```bash
-mvn spring-boot:run
+mvn spring-boot:run -Dspring.profiles.active=dev
 ```
+> [!IMPORTANT]  
+> Agora é necessário especificar o perfil `dev` para ativar as configurações de desenvolvimento.
+> Ajuste o arquivo application-dev.properties se precisar.
+
 
 Se tudo der certo, você verá o logotipo do Spring no terminal e a mensagem indicando que a aplicação iniciou na porta **8080**.
 
