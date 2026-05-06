@@ -37,3 +37,5 @@ public class VinculoEquipeController {
         service.deletar(id);
     }
 }
+
+//ajuste de karen

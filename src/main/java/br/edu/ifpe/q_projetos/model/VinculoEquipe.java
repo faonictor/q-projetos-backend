@@ -24,3 +24,5 @@ public class VinculoEquipe {
     @Column(nullable = false)
     private Boolean ativo;
 }
+
+//ajuste de karen
