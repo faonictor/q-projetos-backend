@@ -45,3 +45,5 @@ public class Usuario {
     @Column(nullable = false)
     private Vinculo vinculo;
 }
+
+// ajuste joão
