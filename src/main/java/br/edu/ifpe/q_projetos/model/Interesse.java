@@ -19,7 +19,6 @@ public class Interesse {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    
     @ManyToOne
     @JoinColumn(name = "id_projeto", nullable = false)
     private _Projeto projeto;
@@ -35,6 +34,9 @@ public class Interesse {
 
     @Column(name = "modalidade_pretendida", nullable = false)
     private String modalidadePretendida;
+
+    @Column(name = "aceitou_lgpd", nullable = false)
+    private Boolean aceitouLgpd;
 
     @CreationTimestamp
     @Column(name = "data_registro", updatable = false)

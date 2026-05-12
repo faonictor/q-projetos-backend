@@ -64,7 +64,7 @@ public class _Projeto {
 
     // Atributos sem anotações específicas viram colunas normais no banco.
     // Inicia como verdadeiro por padrão (um projeto recém-cadastrado está ativo).
-    private boolean ativo = true; 
+    private Boolean ativo = true; 
 
     // --- Campos de Data ---
 
