@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/projetos")
+@RequestMapping("/api/projetos-template") // URL base para acessar este controller
 @CrossOrigin(origins = "*") // Permite que o Front-end (Ionic) consuma esta API
 public class _ProjetoController {
 
