@@ -20,4 +20,9 @@ public class InteresseService {
     public List<Interesse> listarTodos() {
         return repository.findAll();
     }
+
+     public List<Interesse> listarLeadsPorCoordenador(String responsavel) {
+
+        return repository.findByProjetoResponsavel(responsavel);
+    }
 }
