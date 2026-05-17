@@ -3,7 +3,12 @@ package br.edu.ifpe.q_projetos.repository;
 import br.edu.ifpe.q_projetos.model.VinculoEquipe;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface VinculoEquipeRepository extends JpaRepository<VinculoEquipe, Long> {
-}
+public interface VinculoEquipeRepository
+        extends JpaRepository<VinculoEquipe, Long> {
 
+    VinculoEquipe findByIdProjetoAndIdUsuario(
+            Long idProjeto,
+            Long idUsuario
+    );
+}
 //ajuste de karen
