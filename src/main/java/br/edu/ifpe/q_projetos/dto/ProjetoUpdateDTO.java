@@ -1,4 +1,4 @@
-package br.edu.ifpe.q_projetos.dto;
+package br.edu.ifpe.q_projetos.DTO;
 
 import br.edu.ifpe.q_projetos.model.Projeto.ModalidadeProjeto;
 import br.edu.ifpe.q_projetos.model.Projeto.TipoProjeto;

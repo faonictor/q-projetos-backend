@@ -1,10 +1,13 @@
 package br.edu.ifpe.q_projetos.controller;
 
-import br.edu.ifpe.q_projetos.dto.ProjetoCreateDTO;
-import br.edu.ifpe.q_projetos.dto.ProjetoResponseDTO;
-import br.edu.ifpe.q_projetos.dto.ProjetoUpdateDTO;
+
+import br.edu.ifpe.q_projetos.DTO.ProjetoCreateDTO;
+import br.edu.ifpe.q_projetos.DTO.ProjetoResponseDTO;
+import br.edu.ifpe.q_projetos.DTO.ProjetoUpdateDTO;
 import br.edu.ifpe.q_projetos.model.Projeto.TipoProjeto;
 import br.edu.ifpe.q_projetos.service.ProjetoService;
+
+
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

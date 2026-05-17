@@ -1,8 +1,8 @@
 package br.edu.ifpe.q_projetos.service;
 
-import br.edu.ifpe.q_projetos.dto.UsuarioCreateDTO;
-import br.edu.ifpe.q_projetos.dto.UsuarioResponseDTO;
-import br.edu.ifpe.q_projetos.dto.UsuarioUpdateDTO;
+import br.edu.ifpe.q_projetos.DTO.UsuarioCreateDTO;
+import br.edu.ifpe.q_projetos.DTO.UsuarioResponseDTO;
+import br.edu.ifpe.q_projetos.DTO.UsuarioUpdateDTO;
 import br.edu.ifpe.q_projetos.model.Usuario;
 import br.edu.ifpe.q_projetos.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;

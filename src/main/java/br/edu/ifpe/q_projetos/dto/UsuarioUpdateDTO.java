@@ -1,4 +1,4 @@
-package br.edu.ifpe.q_projetos.dto;
+package br.edu.ifpe.q_projetos.DTO;
 
 import br.edu.ifpe.q_projetos.model.Usuario.Role;
 import br.edu.ifpe.q_projetos.model.Usuario.Vinculo;
