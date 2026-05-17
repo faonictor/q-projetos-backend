@@ -192,5 +192,28 @@ Siga estes passos visuais:
 2. Ao clicar nele, o seu navegador vai abrir diretamente na página do GitHub.
 3. Confirme se a base está apontando para a `development`, adicione uma descrição e clique em **Create pull request**.
 
+## 📖 Documentação Interativa (Swagger / OpenAPI)
+
+A API do **Q-Projetos** utiliza o **Springdoc OpenAPI (Swagger)** para gerar uma documentação interativa e automatizada de todos os endpoints em tempo real. Com ela, você pode visualizar as rotas disponíveis, os modelos de dados esperados (Schemas) e até mesmo realizar testes diretamente pelo navegador, simulando requisições sem precisar abrir o Postman.
+
+### 🌐 Como Acessar
+
+Após iniciar a aplicação localmente, abra o seu navegador de preferência e acesse o endereço abaixo:
+
+👉 **[http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)**
+
+### 🛠️ Recursos Disponíveis na Interface
+
+* **Agrupamento por Contexto:** Os endpoints aparecem organizados de acordo com os seus respectivos controladores (ex: `Projetos`, `Usuários`, `Interesses`, `Vínculos`).
+* **Testes Diretos ("Try it out"):** Ao clicar em qualquer rota, você verá um botão chamado **"Try it out"**. Ele liberará os campos para você preencher os parâmetros da URL ou o corpo do JSON. Clique em **"Execute"** para enviar a requisição real para o seu banco de dados local e ver a resposta imediatamente.
+* **Consulta de Schemas:** No rodapé da página, a seção *Schemas* mapeia a estrutura exata de dados que a API aceita e devolve, detalhando quais campos são obrigatórios, tipos de dados e regras dos Enums.
+
+### 🔐 Testando Rotas Protegidas (Token JWT)
+
+Quando o sistema de autenticação via Token estiver ativo e bloqueando rotas, você poderá se autenticar diretamente pelo Swagger:
+1. Faça a requisição de login (no endpoint correspondente) e copie o token gerado.
+2. Na página do Swagger, clique no botão verde **"Authorize"** localizado no topo superior direito.
+3. Cole o token no campo de texto e clique em **Authorize**.
+4. Clique em **Close**. O Swagger passará a incluir o cabeçalho `Authorization: Bearer <seu_token>` de forma automática em todos os testes que você realizar ali.
 
 ***Desenvolvido com dedicação pela equipe do IFPE - Afogados da Ingazeira.***
