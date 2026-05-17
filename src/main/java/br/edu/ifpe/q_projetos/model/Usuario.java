@@ -33,8 +33,8 @@ public class Usuario {
     @Column(nullable = false, unique = true)
     private String email;
 
-    // é necessário implementar lo hash hihihihi (O Louco Bulovask) no serviço
-    @Column(nullable = false)
+    // Removido o 'nullable = false' para permitir cadastros via Google Auth (OAuth2)
+    @Column
     private String senha;
 
     @Enumerated(EnumType.STRING)
@@ -45,5 +45,3 @@ public class Usuario {
     @Column(nullable = false)
     private Vinculo vinculo;
 }
-
-// ajuste joão

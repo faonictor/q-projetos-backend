@@ -1,10 +1,14 @@
 package br.edu.ifpe.q_projetos.controller;
-import br.edu.ifpe.q_projetos.model.Projeto;
+
+import br.edu.ifpe.q_projetos.dto.ProjetoCreateDTO;
+import br.edu.ifpe.q_projetos.dto.ProjetoResponseDTO;
+import br.edu.ifpe.q_projetos.dto.ProjetoUpdateDTO;
+import br.edu.ifpe.q_projetos.model.Projeto.TipoProjeto;
 import br.edu.ifpe.q_projetos.service.ProjetoService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,84 +22,58 @@ public class ProjetoController {
     private ProjetoService service;
 
     @GetMapping
-    public List<Projeto> listar() {
-
-        return service.listarTodos();
+    public ResponseEntity<List<ProjetoResponseDTO>> listar() {
+        return ResponseEntity.ok(service.listarTodos());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Projeto> buscarPorId(
-            @PathVariable Long id
-    ) {
-
-        return service.buscarPorId(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ProjetoResponseDTO> buscarPorId(@PathVariable Long id) {
+        // O Optional foi removido aqui porque o Service já lança exceção se não achar
+        return ResponseEntity.ok(service.buscarPorId(id));
     }
 
-   
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public Projeto criar(
-            @RequestBody Projeto projeto
-    ) {
-
-        return service.salvar(projeto);
+    public ResponseEntity<ProjetoResponseDTO> criar(@Valid @RequestBody ProjetoCreateDTO dto) {
+        // O @Valid aciona as validações que configuramos no DTO
+        ProjetoResponseDTO projetoSalvo = service.salvar(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(projetoSalvo);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Projeto> atualizar(
+    public ResponseEntity<ProjetoResponseDTO> atualizar(
             @PathVariable Long id,
-            @RequestBody Projeto projeto
+            @Valid @RequestBody ProjetoUpdateDTO dto
     ) {
-
-        try {
-
-            Projeto projetoAtualizado =
-                    service.atualizar(id, projeto);
-
-            return ResponseEntity.ok(projetoAtualizado);
-
-        } catch (RuntimeException e) {
-
-            return ResponseEntity.notFound().build();
-        }
+        ProjetoResponseDTO projetoAtualizado = service.atualizar(id, dto);
+        return ResponseEntity.ok(projetoAtualizado);
     }
-
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deletar(
-            @PathVariable Long id
-    ) {
-
+    public void deletar(@PathVariable Long id) {
         service.deletar(id);
     }
 
-    
+    // --- ENDPOINTS DE BUSCA ---
+
     @GetMapping("/buscar")
-    public List<Projeto> buscarPorTexto(
-            @RequestParam String texto
-    ) {
-
-        return service.buscarPorTexto(texto);
+    public ResponseEntity<List<ProjetoResponseDTO>> buscarPorTexto(@RequestParam String texto) {
+        // Nota: O método no Service precisará ser ajustado para retornar ProjetoResponseDTO
+        return ResponseEntity.ok(service.buscarPorTexto(texto));
     }
 
-  
     @GetMapping("/tipo")
-    public List<Projeto> buscarPorTipo(
-            @RequestParam Projeto.TipoProjeto tipo
-    ) {
-
-        return service.buscarPorTipo(tipo);
+    public ResponseEntity<List<ProjetoResponseDTO>> buscarPorTipo(@RequestParam TipoProjeto tipo) {
+        // Nota: O método no Service precisará ser ajustado para retornar ProjetoResponseDTO
+        return ResponseEntity.ok(service.buscarPorTipo(tipo));
     }
-
 
     @GetMapping("/status")
-    public List<Projeto> buscarPorStatus(
-            @RequestParam Projeto.StatusInscricao status
+    public ResponseEntity<List<ProjetoResponseDTO>> buscarPorStatus(
+            @RequestParam ProjetoResponseDTO.StatusInscricao status
     ) {
-
-        return service.buscarPorStatus(status);
+        // Como o status agora é dinâmico (não está mais no banco), este endpoint 
+        // chamará a lógica correspondente no Service baseada nas datas.
+        return ResponseEntity.ok(service.buscarPorStatus(status));
     }
 }
