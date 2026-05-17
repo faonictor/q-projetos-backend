@@ -30,7 +30,7 @@ public class ProjetoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProjetoResponseDTO> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<ProjetoResponseDTO> buscarPorId(@PathVariable("id") Long id) {
         // O Optional foi removido aqui porque o Service já lança exceção se não achar
         return ResponseEntity.ok(service.buscarPorId(id));
     }
@@ -60,13 +60,13 @@ public class ProjetoController {
     // --- ENDPOINTS DE BUSCA ---
 
     @GetMapping("/buscar")
-    public ResponseEntity<List<ProjetoResponseDTO>> buscarPorTexto(@RequestParam String texto) {
+    public ResponseEntity<List<ProjetoResponseDTO>> buscarPorTexto(@RequestParam("texto") String texto) {
         // Nota: O método no Service precisará ser ajustado para retornar ProjetoResponseDTO
         return ResponseEntity.ok(service.buscarPorTexto(texto));
     }
 
     @GetMapping("/tipo")
-    public ResponseEntity<List<ProjetoResponseDTO>> buscarPorTipo(@RequestParam TipoProjeto tipo) {
+    public ResponseEntity<List<ProjetoResponseDTO>> buscarPorTipo(@RequestParam("tipo") TipoProjeto tipo) {
         // Nota: O método no Service precisará ser ajustado para retornar ProjetoResponseDTO
         return ResponseEntity.ok(service.buscarPorTipo(tipo));
     }

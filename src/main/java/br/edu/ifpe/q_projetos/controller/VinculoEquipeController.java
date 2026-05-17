@@ -21,7 +21,7 @@ public class VinculoEquipeController {
     @PostMapping
     public VinculoEquipe criar(
             @RequestBody VinculoEquipe vinculo,
-            @RequestParam Long usuarioLogado
+            @RequestParam("usuarioLogado") Long usuarioLogado
     ) {
 
         return service.salvar(
@@ -47,7 +47,7 @@ public class VinculoEquipeController {
     public VinculoEquipe atualizar(
             @PathVariable Long id,
             @RequestBody VinculoEquipe vinculo,
-            @RequestParam Long usuarioLogado
+            @RequestParam("usuarioLogado") Long usuarioLogado
     ) {
 
         return service.atualizar(
@@ -60,7 +60,7 @@ public class VinculoEquipeController {
     @DeleteMapping("/{id}")
     public void deletar(
             @PathVariable Long id,
-            @RequestParam Long usuarioLogado
+            @RequestParam("usuarioLogado") Long usuarioLogado
     ) {
 
         service.deletar(

@@ -22,7 +22,7 @@ public class InteresseController {
     }
 
     @GetMapping("/{id}")
-    public Interesse buscarPorId(@PathVariable Long id) {
+    public Interesse buscarPorId(@PathVariable("id") Long id) {
         return service.buscarPorId(id);
     }
 
@@ -41,7 +41,7 @@ public class InteresseController {
 
     @GetMapping("/coordenador/{responsavel}")
     public ResponseEntity<List<Interesse>> listarLeadsCoordenador(
-            @PathVariable String responsavel) {
+            @PathVariable("responsavel") String responsavel) {
 
         List<Interesse> leads =
                 service.listarLeadsPorCoordenador(responsavel);
