@@ -157,14 +157,21 @@ public class ProjetoService {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         
         // 1. Verificamos se existe alguém autenticado e se não é o usuário anônimo do Spring
-        boolean estaAutenticado = auth != null && auth.isAuthenticated() && !auth.getName().equals("anonymousUser");
+        // boolean estaAutenticado = auth != null && auth.isAuthenticated() && !auth.getName().equals("anonymousUser");
 
         Long idFinalDoCoordenador;
 
-        if (estaAutenticado) {
-            // FLUXO REAL: Quando o sistema de login estiver pronto
+        // Colocando a validação direto no if, a IDE garante que tudo lá dentro está protegido contra NullPointerException
+        if (auth != null && auth.isAuthenticated() && !auth.getName().equals("anonymousUser")) {
+            
+            // Aqui dentro a IDE sabe com 100% de certeza que 'auth' NÃO é nulo
             Usuario logado = usuarioRepository.findByEmail(auth.getName())
                     .orElseThrow(() -> new RuntimeException("Usuário logado não encontrado no banco."));
+
+        // if (estaAutenticado) {
+        //     // FLUXO REAL: Quando o sistema de login estiver pronto
+        //     Usuario logado = usuarioRepository.findByEmail(auth.getName())
+        //             .orElseThrow(() -> new RuntimeException("Usuário logado não encontrado no banco."));
 
             boolean isAdmin = auth.getAuthorities().stream()
                     .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
