@@ -23,7 +23,7 @@ public class ProjetoService {
     private UsuarioRepository usuarioRepository;
 
     @Autowired
-    private VinculoEquipeRepository vinculoRepository; // Repositório da outra equipe
+    private VinculoEquipeRepository vinculoRepository;
 
     // --- LEITURA ---
 
@@ -54,7 +54,7 @@ public class ProjetoService {
         // 3. Salvar o Projeto para gerar o ID
         Projeto projetoSalvo = repository.save(projeto);
 
-        // 4. Vincular o Coordenador (ENT05)
+        // 4. Vincular o Coordenador ao projeto recém-criado
         vincularCoordenador(projetoSalvo.getId(), dto.getIdCoordenadorManual());
 
         return toResponseDTO(projetoSalvo);
@@ -67,8 +67,7 @@ public class ProjetoService {
         Projeto projeto = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Projeto não encontrado"));
 
-        // Validação de Segurança: Somente o coordenador ou ADMIN pode editar (lógica
-        // simplificada)
+        // Validação de Segurança: Somente o coordenador ou ADMIN pode editar
         validarPermissaoEdicao(id);
 
         // Atualização parcial (Patch style)
@@ -87,12 +86,10 @@ public class ProjetoService {
         if (dto.getBanner() != null)
             projeto.setBanner(dto.getBanner());
 
-        // Atualização de datas com nova validação
         if (dto.getDataInicio() != null)
             projeto.setDataInicio(dto.getDataInicio());
         if (dto.getDataTermino() != null)
             projeto.setDataTermino(dto.getDataTermino());
-        // ... repetir para as outras datas se necessário ...
 
         return toResponseDTO(repository.save(projeto));
     }
@@ -122,7 +119,6 @@ public class ProjetoService {
         LocalDate hoje = LocalDate.now();
         List<Projeto> projetos;
 
-        // O Service traduz o Enum do DTO para a query de data correta do banco
         switch (status) {
             case ABERTA:
                 projetos = repository.findProjetosComInscricoesAbertas(hoje);
@@ -155,52 +151,69 @@ public class ProjetoService {
 
     private void vincularCoordenador(Long projetoId, Long idCoordenadorManual) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        
-        // 1. Verificamos se existe alguém autenticado e se não é o usuário anônimo do Spring
-        // boolean estaAutenticado = auth != null && auth.isAuthenticated() && !auth.getName().equals("anonymousUser");
 
-        Long idFinalDoCoordenador;
+        // Bloqueio rígido: Se cair aqui sem autenticação real, interrompe o processo.
+        if (auth == null || !auth.isAuthenticated() || auth.getName().equals("anonymousUser")) {
+            throw new RuntimeException("Acesso negado: É necessário estar logado para criar um projeto.");
+        }
 
-        // Colocando a validação direto no if, a IDE garante que tudo lá dentro está protegido contra NullPointerException
-        if (auth != null && auth.isAuthenticated() && !auth.getName().equals("anonymousUser")) {
-            
-            // Aqui dentro a IDE sabe com 100% de certeza que 'auth' NÃO é nulo
-            Usuario logado = usuarioRepository.findByEmail(auth.getName())
-                    .orElseThrow(() -> new RuntimeException("Usuário logado não encontrado no banco."));
+        Usuario logado = usuarioRepository.findByEmail(auth.getName())
+                .orElseThrow(() -> new RuntimeException("Usuário logado não encontrado no banco de dados."));
 
-        // if (estaAutenticado) {
-        //     // FLUXO REAL: Quando o sistema de login estiver pronto
-        //     Usuario logado = usuarioRepository.findByEmail(auth.getName())
-        //             .orElseThrow(() -> new RuntimeException("Usuário logado não encontrado no banco."));
+        Long idFinalDoCoordenador = logado.getId();
 
-            boolean isAdmin = auth.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        // Mantida a lógica de Admin para atribuir o projeto a outra pessoa, caso venha
+        // no DTO
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
-            if (idCoordenadorManual != null && isAdmin) {
-                idFinalDoCoordenador = idCoordenadorManual;
-            } else {
-                idFinalDoCoordenador = logado.getId();
-            }
-        } else {
-            // FLUXO DE TESTE (Postman): Se não houver login, ele tenta usar o ID manual que você enviou.
-            // Se você não enviar nada, ele usa o ID 1L como padrão (certifique-se de ter um user com ID 1 no banco!)
-            idFinalDoCoordenador = (idCoordenadorManual != null) ? idCoordenadorManual : 1L;
-            
-            System.out.println("⚠️ MODO DE TESTE: Criando vínculo para o usuário ID: " + idFinalDoCoordenador);
+        if (idCoordenadorManual != null && isAdmin) {
+            idFinalDoCoordenador = idCoordenadorManual;
         }
 
         VinculoEquipe vinculo = new VinculoEquipe();
         vinculo.setIdProjeto(projetoId);
         vinculo.setIdUsuario(idFinalDoCoordenador);
-        vinculo.setPapel(VinculoEquipe.Papel.COORDENADOR); //estava passando strings, mas precisa ser o ENUM.
+        vinculo.setPapel(VinculoEquipe.Papel.COORDENADOR);
         vinculo.setAtivo(true);
 
         vinculoRepository.save(vinculo);
     }
 
     private void validarPermissaoEdicao(Long projetoId) {
-        // Aqui você implementará a lógica de checar na tabela VinculoEquipe
-        // se o usuário logado tem o papel de 'COORDENADOR' para este projetoId.
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        // 1. Barreira inicial de autenticação
+        if (auth == null || !auth.isAuthenticated() || auth.getName().equals("anonymousUser")) {
+            throw new RuntimeException("Acesso negado: É necessário estar logado para realizar esta ação.");
+        }
+
+        // 2. Se o usuário for um ADMIN, ele tem passe livre ("Superusuário")
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        if (isAdmin) {
+            return; // Sai do método sem lançar exceção, liberando a edição
+        }
+
+        // 3. Descobrindo quem é o usuário atual
+        Usuario logado = usuarioRepository.findByEmail(auth.getName())
+                .orElseThrow(() -> new RuntimeException("Usuário logado não encontrado no banco de dados."));
+
+        // 4. Buscando o vínculo entre este usuário e este projeto
+        // Precisaremos garantir que o repositório tenha o método
+        // findByIdProjetoAndIdUsuario
+        VinculoEquipe vinculo = vinculoRepository.findByIdProjetoAndIdUsuario(projetoId, logado.getId())
+                .orElseThrow(() -> new RuntimeException("Acesso negado: Você não possui vínculo com este projeto."));
+
+        // 5. Validando as regras de negócio finais (Papel e Status)
+        if (!VinculoEquipe.Papel.COORDENADOR.equals(vinculo.getPapel())) {
+            throw new RuntimeException(
+                    "Acesso negado: Apenas o COORDENADOR possui permissão para editar ou deletar o projeto.");
+        }
+
+        if (!Boolean.TRUE.equals(vinculo.getAtivo())) {
+            throw new RuntimeException("Acesso negado: Seu vínculo de coordenador com este projeto está inativo.");
+        }
     }
 
     private void copiarDadosParaEntidade(ProjetoCreateDTO dto, Projeto projeto) {
