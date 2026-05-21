@@ -19,7 +19,7 @@ import io.jsonwebtoken.JwtException;
 public class JwtService {
 
   // Essa variável vai puxar o valor lá do seu application.properties
-  @Value("${api.security.token.secret}")
+  @Value("${jwt.secret}")
   private String secret;
 
   public String generateToken(Usuario usuario) {
