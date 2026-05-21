@@ -1,13 +1,13 @@
 package br.edu.ifpe.q_projetos.service;
 
-import br.edu.ifpe.q_projetos.model.VinculoEquipe;
-import br.edu.ifpe.q_projetos.repository.VinculoEquipeRepository;
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-import java.util.Optional;
+import br.edu.ifpe.q_projetos.model.VinculoEquipe;
+import br.edu.ifpe.q_projetos.repository.VinculoEquipeRepository;
 
 @Service
 public class VinculoEquipeService {

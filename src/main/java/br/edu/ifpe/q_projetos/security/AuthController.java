@@ -1,19 +1,22 @@
 package br.edu.ifpe.q_projetos.security;
 
-import br.edu.ifpe.q_projetos.DTO.LoginRequest;
-import br.edu.ifpe.q_projetos.DTO.UsuarioCreateDTO;
-import br.edu.ifpe.q_projetos.DTO.UsuarioResponseDTO;
-import br.edu.ifpe.q_projetos.model.Usuario;
-import jakarta.validation.Valid;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
+import br.edu.ifpe.q_projetos.DTO.LoginRequest;
+import br.edu.ifpe.q_projetos.DTO.UsuarioCreateDTO;
+import br.edu.ifpe.q_projetos.DTO.UsuarioResponseDTO;
+import br.edu.ifpe.q_projetos.model.Usuario;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/auth")

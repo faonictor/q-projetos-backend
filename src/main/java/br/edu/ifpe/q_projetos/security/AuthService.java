@@ -1,14 +1,15 @@
 package br.edu.ifpe.q_projetos.security;
 
-import br.edu.ifpe.q_projetos.DTO.UsuarioCreateDTO;
-import br.edu.ifpe.q_projetos.DTO.UsuarioResponseDTO;
-import br.edu.ifpe.q_projetos.model.Usuario;
-import br.edu.ifpe.q_projetos.repository.UsuarioRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import br.edu.ifpe.q_projetos.DTO.UsuarioCreateDTO;
+import br.edu.ifpe.q_projetos.DTO.UsuarioResponseDTO;
+import br.edu.ifpe.q_projetos.model.Usuario;
+import br.edu.ifpe.q_projetos.repository.UsuarioRepository;
 
 @Service
 public class AuthService implements UserDetailsService {

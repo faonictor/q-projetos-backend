@@ -1,18 +1,18 @@
 package br.edu.ifpe.q_projetos.security;
 
-import br.edu.ifpe.q_projetos.model.Usuario;
-import br.edu.ifpe.q_projetos.repository.UsuarioRepository;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.io.IOException;
-import java.util.Optional;
+import br.edu.ifpe.q_projetos.model.Usuario;
+import br.edu.ifpe.q_projetos.repository.UsuarioRepository;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
