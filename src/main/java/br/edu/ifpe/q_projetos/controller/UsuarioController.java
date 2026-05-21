@@ -22,13 +22,13 @@ public class UsuarioController {
     private UsuarioService service;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
     public UsuarioResponseDTO salvar(@Valid @RequestBody UsuarioCreateDTO dto) {
         return service.cadastrarUsuario(dto);
     }
 
     @GetMapping
-    // Opcional: Bloqueia na porta de entrada se não for ADMIN, alinhado com o RF18
     @PreAuthorize("hasRole('ADMIN')") 
     public List<UsuarioResponseDTO> listarTodos() {
         return service.listarTodos();

@@ -27,7 +27,7 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        
+
         // 1. Extrai o token do cabeçalho "Authorization"
         String token = recoverToken(request);
 
@@ -40,11 +40,11 @@ public class JwtFilter extends OncePerRequestFilter {
                 usuarioRepository.findByEmail(email).ifPresent(usuario -> {
                     // Criamos o objeto de autenticação que o Spring Security entende
                     var authentication = new UsernamePasswordAuthenticationToken(
-                            usuario, 
-                            null, 
-                            null // Aqui você pode mapear as authorities se quiser usar @PreAuthorize
+                            usuario,
+                            null,
+                            usuario.getAuthorities()
                     );
-                    
+
                     // 4. Injeta o usuário no contexto de segurança da requisição atual
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 });

@@ -43,6 +43,7 @@ public class ProjetoService {
 
     @Transactional
     public ProjetoResponseDTO salvar(ProjetoCreateDTO dto) {
+        validarPermissaoCriacao();
         // 1. Validar cronograma (Regra de Negócio)
         validarDatas(dto.getDataInicio(), dto.getDataTermino(), dto.getDataInicioInscricao(),
                 dto.getDataFimInscricao());
@@ -95,6 +96,10 @@ public class ProjetoService {
     }
 
     public void deletar(Long id) {
+        if (!repository.existsById(id)) {
+            throw new RuntimeException("Projeto não encontrado com o ID: " + id);
+        }
+
         validarPermissaoEdicao(id);
         repository.deleteById(id);
     }
@@ -183,36 +188,63 @@ public class ProjetoService {
     private void validarPermissaoEdicao(Long projetoId) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-        // 1. Barreira inicial de autenticação
         if (auth == null || !auth.isAuthenticated() || auth.getName().equals("anonymousUser")) {
             throw new RuntimeException("Acesso negado: É necessário estar logado para realizar esta ação.");
         }
 
-        // 2. Se o usuário for um ADMIN, ele tem passe livre ("Superusuário")
         boolean isAdmin = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
         if (isAdmin) {
-            return; // Sai do método sem lançar exceção, liberando a edição
+            return;
         }
 
-        // 3. Descobrindo quem é o usuário atual
         Usuario logado = usuarioRepository.findByEmail(auth.getName())
                 .orElseThrow(() -> new RuntimeException("Usuário logado não encontrado no banco de dados."));
 
-        // 4. Buscando o vínculo entre este usuário e este projeto
-        // Precisaremos garantir que o repositório tenha o método
-        // findByIdProjetoAndIdUsuario
+        // O pulo do gato está aqui: se o repositório retornar vazio, significa que o
+        // USER não é dono/coordenador do projeto
         VinculoEquipe vinculo = vinculoRepository.findByIdProjetoAndIdUsuario(projetoId, logado.getId())
-                .orElseThrow(() -> new RuntimeException("Acesso negado: Você não possui vínculo com este projeto."));
+                .orElseThrow(
+                        () -> new RuntimeException("Acesso negado: Você não possui permissão sobre este projeto."));
 
-        // 5. Validando as regras de negócio finais (Papel e Status)
         if (!VinculoEquipe.Papel.COORDENADOR.equals(vinculo.getPapel())) {
-            throw new RuntimeException(
-                    "Acesso negado: Apenas o COORDENADOR possui permissão para editar ou deletar o projeto.");
+            throw new RuntimeException("Acesso negado: Apenas o COORDENADOR possui permissão para alterar o projeto.");
         }
 
         if (!Boolean.TRUE.equals(vinculo.getAtivo())) {
-            throw new RuntimeException("Acesso negado: Seu vínculo de coordenador com este projeto está inativo.");
+            throw new RuntimeException("Acesso negado: Seu vínculo com este projeto está inativo.");
+        }
+    }
+
+    private void validarPermissaoCriacao() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        // 1. Validação de autenticação básica
+        if (auth == null || !auth.isAuthenticated() || auth.getName().equals("anonymousUser")) {
+            throw new RuntimeException("Acesso negado: É necessário estar logado para realizar esta ação.");
+        }
+
+        // 2. O X da questão: Se for ADMIN, ignora o resto e concede permissão imediata
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (isAdmin) {
+            return; // Passa direto
+        }
+
+        // 3. Se não for ADMIN, busca o usuário logado para validar o vínculo
+        // institucional
+        Usuario logado = usuarioRepository.findByEmail(auth.getName())
+                .orElseThrow(() -> new RuntimeException("Usuário logado não encontrado no banco de dados."));
+
+        // 4. Validação do vínculo: Se não for SERVIDOR (por exemplo, se for ESTUDANTE),
+        // o acesso é bloqueado
+        // Nota: Certifique-se de que logado.getVinculo() retorna o Enum ou String com o
+        // valor "SERVIDOR"
+        if (logado.getVinculo() == null || !"SERVIDOR".equalsIgnoreCase(logado.getVinculo().toString())) {
+            throw new RuntimeException(
+                    "Acesso negado: Apenas Administradores ou Servidores possuem permissão para cadastrar projetos.");
         }
     }
 

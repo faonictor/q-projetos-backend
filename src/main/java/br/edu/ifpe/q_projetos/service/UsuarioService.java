@@ -20,93 +20,58 @@ public class UsuarioService {
     @Autowired
     private UsuarioRepository repository;
 
-    @Autowired // Corrigido: Injeção via Spring de acordo com o plano de arquitetura
+    @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
     public UsuarioResponseDTO cadastrarUsuario(UsuarioCreateDTO dto) {
+
+        // Verifica se o e-mail já existe
         if (repository.existsByEmail(dto.getEmail())) {
-            throw new RuntimeException("Regra de Negócio: Este e-mail já está cadastrado no sistema.");
+            throw new RuntimeException("Este e-mail já está cadastrado no sistema.");
         }
 
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        boolean isAdmin = auth != null && auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-
         Usuario usuario = new Usuario();
+
         usuario.setNome(dto.getNome());
         usuario.setEmail(dto.getEmail());
 
-        // --- PROTEÇÃO DE GOVERNANÇA E VÍNCULO ---
-        if (!isAdmin) {
-            // Se NÃO for admin, o sistema ignora o que veio no DTO e decide pelo e-mail
-            usuario.setRole(Usuario.Role.ROLE_USER);
+        // Como este método agora é administrativo,
+        // o ADMIN pode definir role e vínculo manualmente
+        usuario.setRole(
+                dto.getRole() != null
+                        ? dto.getRole()
+                        : Usuario.Role.ROLE_USER);
 
-            if (dto.getEmail().endsWith("@discente.ifpe.edu.br")) {
-                usuario.setVinculo(Usuario.Vinculo.ESTUDANTE);
-            } else if (dto.getEmail().endsWith("@ifpe.edu.br") || dto.getEmail().endsWith(".ifpe.edu.br")) {
-                usuario.setVinculo(Usuario.Vinculo.SERVIDOR);
-            } else {
-                // Impede que e-mails pessoais (gmail, hotmail) se cadastrem sem validação
-                throw new RuntimeException("Regra de Negócio: É necessário utilizar um e-mail institucional do IFPE.");
-            }
-        } else {
-            // Se for ADMIN logado, ele tem poder total para definir qualquer role ou
-            // vínculo
-            usuario.setRole(dto.getRole() != null ? dto.getRole() : Usuario.Role.ROLE_USER);
-            usuario.setVinculo(dto.getVinculo());
+        usuario.setVinculo(dto.getVinculo());
+
+        // Senha obrigatória para cadastro administrativo
+        if (dto.getSenha() == null || dto.getSenha().isBlank()) {
+            throw new RuntimeException("A senha é obrigatória.");
         }
 
-        // Criptografia de senha
-        if (dto.getSenha() != null && !dto.getSenha().isBlank()) {
-            usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
-        }
-
+        usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
         return toResponseDTO(repository.save(usuario));
     }
 
-    // public UsuarioResponseDTO cadastrarUsuario(UsuarioCreateDTO dto) {
-    //     // 1. Validação de e-mail único (Regra de Negócio Obrigatória)
-    //     if (repository.existsByEmail(dto.getEmail())) {
-    //         throw new RuntimeException("Regra de Negócio: Este e-mail já está cadastrado no sistema.");
-    //     }
-
-    //     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    //     boolean isAdmin = auth != null && auth.getAuthorities().stream()
-    //             .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-
-    //     Usuario usuario = new Usuario();
-    //     usuario.setNome(dto.getNome());
-    //     usuario.setEmail(dto.getEmail());
-    //     usuario.setVinculo(dto.getVinculo());
-
-    //     // 2. Proteção contra Escala de Privilégios (RF17 e RF18)
-    //     if (!isAdmin) {
-    //         usuario.setRole(Usuario.Role.ROLE_USER);
-    //     } else {
-    //         usuario.setRole(dto.getRole());
-    //     }
-
-    //     // 3. Segurança da Senha adaptada para Google OAuth2 (Prevenção de Bug)
-    //     if (dto.getSenha() != null && !dto.getSenha().isBlank()) {
-    //         String senhaComHash = passwordEncoder.encode(dto.getSenha());
-    //         usuario.setSenha(senhaComHash);
-    //     } else {
-    //         usuario.setSenha(null); // Permite senha nula para logins puramente sociais
-    //     }
-
-    //     return toResponseDTO(repository.save(usuario));
-    // }
-
     public List<UsuarioResponseDTO> listarTodos() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        boolean isAdmin = auth != null && auth.getAuthorities().stream()
+
+        Authentication auth = SecurityContextHolder
+                .getContext()
+                .getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated() || auth.getName().equals("anonymousUser")) {
+            throw new RuntimeException("Usuário não autenticado.");
+        }
+
+        boolean isAdmin = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
         if (!isAdmin) {
             throw new RuntimeException("Acesso negado: apenas administradores podem listar todos os usuários.");
         }
 
-        return repository.findAll().stream()
+        return repository.findAll()
+                .stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -139,40 +104,59 @@ public class UsuarioService {
         return toResponseDTO(logado);
     }
 
-    public UsuarioResponseDTO atualizarUsuario(Long id, UsuarioUpdateDTO dto) { // Ajustado nome conforme especificação
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    public UsuarioResponseDTO atualizarUsuario(Long id, UsuarioUpdateDTO dto) {
+
+        Authentication auth = SecurityContextHolder
+                .getContext()
+                .getAuthentication();
+
+        if (auth == null ||
+                !auth.isAuthenticated() ||
+                auth.getName().equals("anonymousUser")) {
+
+            throw new RuntimeException(
+                    "Usuário não autenticado.");
+        }
+
         String emailLogado = auth.getName();
+
         boolean isAdmin = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
-        return repository.findById(id).map(usuario -> {
-            boolean isDonoDaConta = usuario.getEmail().equals(emailLogado);
+        Usuario usuario = repository.findById(id).orElseThrow(() -> new RuntimeException(
+                "Usuário não encontrado para atualização."));
 
-            if (!isAdmin && !isDonoDaConta) {
-                throw new RuntimeException("Acesso negado: você não tem permissão para editar este perfil.");
+        boolean isDonoDaConta = usuario.getEmail().equals(emailLogado);
+
+        // Apenas admin ou dono da conta
+        if (!isAdmin && !isDonoDaConta) {
+            throw new RuntimeException("Acesso negado: você não tem permissão para editar este perfil.");
+        }
+
+        // Atualiza nome
+        if (dto.getNome() != null && !dto.getNome().isBlank()) {
+            usuario.setNome(dto.getNome());
+        }
+
+        // Apenas ADMIN altera role e vínculo
+        if (isAdmin) {
+            if (dto.getRole() != null) {
+                usuario.setRole(dto.getRole());
             }
 
-            if (dto.getNome() != null)
-                usuario.setNome(dto.getNome());
-            if (dto.getEmail() != null)
-                usuario.setEmail(dto.getEmail());
-
-            // Apenas ADMIN altera Role e Vínculo (RF17)
-            if (isAdmin) {
-                if (dto.getRole() != null)
-                    usuario.setRole(dto.getRole());
-                if (dto.getVinculo() != null)
-                    usuario.setVinculo(dto.getVinculo());
+            if (dto.getVinculo() != null) {
+                usuario.setVinculo(dto.getVinculo());
             }
+        }
 
-            // Atualização de senha segura
-            if (dto.getSenha() != null && !dto.getSenha().isBlank()) {
-                String senhaComHash = passwordEncoder.encode(dto.getSenha());
-                usuario.setSenha(senhaComHash);
-            }
+        // Atualização segura da senha
+        if (dto.getSenha() != null && !dto.getSenha().isBlank()) {
+            usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
+        }
 
-            return toResponseDTO(repository.save(usuario));
-        }).orElseThrow(() -> new RuntimeException("Usuário não encontrado para atualização."));
+        Usuario usuarioAtualizado = repository.save(usuario);
+
+        return toResponseDTO(usuarioAtualizado);
     }
 
     public void deletarUsuario(Long id) { // Ajustado nome conforme especificação
