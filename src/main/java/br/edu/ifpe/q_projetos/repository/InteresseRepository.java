@@ -7,6 +7,6 @@ import java.util.List;
 
 public interface InteresseRepository extends JpaRepository<Interesse, Long> {
 
-List<Interesse> findByProjetoResponsavel(String responsavel);
+  List<Interesse> findByProjetoResponsavel(String responsavel);
 
 }

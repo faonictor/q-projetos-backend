@@ -21,7 +21,7 @@ public class Interesse {
 
     @ManyToOne
     @JoinColumn(name = "id_projeto", nullable = false)
-    private Projeto projeto;
+    private _Projeto projeto;
 
     @Column(nullable = false)
     private String nome;
