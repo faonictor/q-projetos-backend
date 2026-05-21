@@ -39,12 +39,11 @@ public class InteresseController {
         return service.atualizar(id, interesse);
     }
 
-    @GetMapping("/coordenador/{responsavel}")
-    public ResponseEntity<List<Interesse>> listarLeadsCoordenador(
-            @PathVariable("responsavel") String responsavel) {
+    @GetMapping("/projeto/{projetoId}")
+    public ResponseEntity<List<Interesse>> listarLeadsPorProjeto(
+            @PathVariable("projetoId") Long projetoId) {
 
-        List<Interesse> leads =
-                service.listarLeadsPorCoordenador(responsavel);
+        List<Interesse> leads = service.listarLeadsPorProjeto(projetoId);
 
         return ResponseEntity.ok(leads);
     }

@@ -25,9 +25,8 @@ public class InteresseService {
         return repository.findAll();
     }
 
-     public List<Interesse> listarLeadsPorCoordenador(String responsavel) {
-
-        return repository.findByProjetoResponsavel(responsavel);
+    public List<Interesse> listarLeadsPorProjeto(Long projetoId) {
+        return repository.findByProjetoId(projetoId);
     }
 
     public Interesse buscarPorId(Long id) {
