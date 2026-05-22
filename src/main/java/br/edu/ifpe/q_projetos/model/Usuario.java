@@ -1,5 +1,13 @@
 package br.edu.ifpe.q_projetos.model;
 
+import java.util.Collection;
+import java.util.List;
+
+import org.jspecify.annotations.Nullable;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -10,7 +18,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Usuario {
+public class Usuario implements UserDetails {
 
     public enum Role {
         ROLE_ADMIN,
@@ -33,8 +41,8 @@ public class Usuario {
     @Column(nullable = false, unique = true)
     private String email;
 
-    // é necessário implementar lo hash hihihihi (O Louco Bulovask) no serviço
-    @Column(nullable = false)
+    // Removido o 'nullable = false' para permitir cadastros via Google Auth (OAuth2)
+    @Column
     private String senha;
 
     @Enumerated(EnumType.STRING)
@@ -44,6 +52,40 @@ public class Usuario {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Vinculo vinculo;
-}
 
-// ajuste joão
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        // O Spring Security espera que as roles comecem com "ROLE_"
+        return List.of(new SimpleGrantedAuthority(this.role.name()));
+    }
+
+    @Override
+    public @Nullable String getPassword() {
+        return this.senha;
+    }
+
+    @Override
+    public String getUsername() {
+        return this.email;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {   
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }   
+}

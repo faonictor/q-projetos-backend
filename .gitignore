@@ -41,6 +41,7 @@ build/
 Thumbs.db
 ehthumbs.db
 $RECYCLE.BIN/
+.editorconfig
 
 # Logs gerados pelo Spring Boot ou Java
 *.log
@@ -49,14 +50,11 @@ logs/
 # Arquivos de Ambiente (MUITO IMPORTANTE: Impede o vazamento de senhas)
 .env
 .env.*
+!.env.example
 application-local.properties
 application-dev.yml
+# application-dev.properties
 
 # Arquivos temporários e de crash do Java
 hs_err_pid*
 replay_pid*
-
-# Arquivos de configuração do Postman
-.postman/
-postman/
-

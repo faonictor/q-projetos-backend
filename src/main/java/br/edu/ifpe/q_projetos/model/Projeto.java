@@ -14,26 +14,29 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
-@Table (name = "projetos")
-@Data
+@Table(name = "projetos")
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-
+@Builder
 public class Projeto {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 150)
     private String titulo;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     private TipoProjeto tipo;
 
     @Column(columnDefinition = "TEXT")
@@ -55,20 +58,18 @@ public class Projeto {
     @Column(name = "data_fim_inscricao")
     private LocalDate dataFimInscricao;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status_inscricao", nullable = false)
-    private StatusInscricao statusInscricao;
-
-    @Column(name = "link_edital")
+    @Column(name = "link_edital", length = 500)
     private String linkEdital;
 
+    @Column(nullable = false)
     private Integer vagas;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
     private ModalidadeProjeto modalidade;
 
+    @Column(length = 500)
     private String banner;
-
 
     public enum TipoProjeto {
         ENSINO,
@@ -80,11 +81,5 @@ public class Projeto {
         BOLSISTA,
         VOLUNTARIO,
         AMBOS
-    }
-
-    public enum StatusInscricao {
-        ABERTA,
-        ENCERRADA,
-        AGUARDANDO
     }
 }
