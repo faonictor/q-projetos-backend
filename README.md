@@ -69,8 +69,12 @@ spring.datasource.password=sua_senha_local
 * **Via Terminal:** Execute o comando:
 
 ```bash
-mvn spring-boot:run
+mvn spring-boot:run -Dspring.profiles.active=dev
 ```
+> [!IMPORTANT]  
+> Agora é necessário especificar o perfil `dev` para ativar as configurações de desenvolvimento.
+> Ajuste o arquivo application-dev.properties se precisar.
+
 
 Se tudo der certo, você verá o logotipo do Spring no terminal e a mensagem indicando que a aplicação iniciou na porta **8080**.
 
@@ -209,3 +213,4 @@ Quando o sistema de autenticação via Token estiver ativo e bloqueando rotas, v
 4. Clique em **Close**. O Swagger passará a incluir o cabeçalho `Authorization: Bearer <seu_token>` de forma automática em todos os testes que você realizar ali.
 
 ***Desenvolvido com dedicação pela equipe do IFPE - Afogados da Ingazeira.***
+
