@@ -204,6 +204,7 @@ Após iniciar a aplicação localmente, abra o seu navegador de preferência e a
 Quando o sistema de autenticação via Token estiver ativo e bloqueando rotas, você poderá se autenticar diretamente pelo Swagger ou utilizar o Postman.
 
 Para testar via Swagger:
+
 1. Faça a requisição de login (no endpoint correspondente) e copie o token gerado.
 2. Na página do Swagger, clique no botão verde **"Authorize"** localizado no topo superior direito.
 3. Cole o token no campo de texto e clique em **Authorize**.
@@ -220,10 +221,12 @@ Este guia orienta o passo a passo para cadastrar a massa de dados via API e test
 ---
 
 ### 1. Cadastro de Usuários (Massa de Dados)
-Execute os seguintes requests para popular os usuários base. 
+
+Execute os seguintes requests para popular os usuários base.
 **POST** `/api/auth/register`
 
 **A. Administrador:**
+
 ```json
 {
   "nome": "Administrador Geral",
@@ -235,6 +238,7 @@ Execute os seguintes requests para popular os usuários base.
 ```
 
 **B. Professor Coordenador:**
+
 ```json
 {
   "nome": "Professor Coordenador",
@@ -246,6 +250,7 @@ Execute os seguintes requests para popular os usuários base.
 ```
 
 **C. Estudante Ativo:**
+
 ```json
 {
   "nome": "Estudante Ativo",
@@ -259,6 +264,10 @@ Execute os seguintes requests para popular os usuários base.
 ---
 
 ### 2. Login e Autenticação
+
+O sistema possui duas formas de autenticação: **Login Tradicional (Senha)** e **Login Social (Google OAuth2)**.
+
+#### A. Login Tradicional (Admin e Coordenador)
 **Acesso:** Envie um `POST` para `/api/auth/login`.
 
 **Exemplo (Login Admin):**
@@ -268,15 +277,25 @@ Execute os seguintes requests para popular os usuários base.
   "senha": "admin123"
 }
 ```
+**Ação:** Copie o campo `token` da resposta e configure-o como **Bearer Token** no Postman (aba Authorization) ou no Swagger.
 
-**Ação:** Copie o campo `token` da resposta e configure-o como **Bearer Token** no Postman (aba Authorization) ou no Swagger para as requisições seguintes.
+#### B. Login Social via Google (Estudantes)
+Para testar o fluxo do Google sem o Frontend rodando:
+1. Abra o seu **Navegador de Internet** (Chrome, Edge, etc.).
+2. Acesse a URL: `http://localhost:8080/oauth2/authorization/google`
+3. Você será redirecionado para a tela de login do Google. Faça o login com a sua conta do Google/IFPE.
+4. Após o sucesso, o sistema fará o auto-cadastro no banco de dados e redirecionará você para uma rota "falsa" do frontend (ex: `http://localhost:8100/login-success?token=eyJhbGci...`).
+5. Copie o gigantesco texto que vem logo após `?token=` na URL do seu navegador.
+6. Cole esse texto como seu **Bearer Token** no Postman/Swagger.
 
 ---
 
 ### 3. Gerenciamento de Projetos (Logado como Admin ou Coordenador)
 
 #### Criar Novo Projeto (Gera Status PENDENTE)
+
 **POST** `/api/projetos`
+
 ```json
 {
   "titulo": "Novo Projeto de Automação",
@@ -294,9 +313,11 @@ Execute os seguintes requests para popular os usuários base.
   "idCoordenadorManual": 2
 }
 ```
+
 *(Nota: `idCoordenadorManual` associa o projeto ao usuário criado no passo 1.B. Se não passar este campo, o projeto ficará vinculado a quem fez a requisição).*
 
 #### Aprovar Projeto (Logado como Admin)
+
 **POST** `/api/projetos/1/aprovar`
 
 ---
@@ -304,7 +325,9 @@ Execute os seguintes requests para popular os usuários base.
 ### 4. Leads de Interesse (Logado como Estudante)
 
 #### Registrar Interesse (RN02 - Unicidade)
+
 **POST** `/api/interesses`
+
 ```json
 {
   "idProjeto": 1,
@@ -315,6 +338,7 @@ Execute os seguintes requests para popular os usuários base.
   "aceitouLgpd": true
 }
 ```
+
 *Tente enviar esta requisição duas vezes para testar o erro 400 da Regra de Negócio (RN02).*
 
 ---
@@ -322,7 +346,9 @@ Execute os seguintes requests para popular os usuários base.
 ### 5. Favoritos e Histórico (Logado como Estudante)
 
 #### Favoritar um Projeto
+
 **POST** `/api/favoritos`
+
 ```json
 {
   "idProjeto": 1
@@ -330,6 +356,7 @@ Execute os seguintes requests para popular os usuários base.
 ```
 
 #### Ver Meu Histórico
+
 **GET** `/api/favoritos/meu-historico`
 *Retorna os projetos favoritados pelo usuário logado.*
 
@@ -338,7 +365,9 @@ Execute os seguintes requests para popular os usuários base.
 ### 6. Equipe (Logado como Coordenador do Projeto)
 
 #### Adicionar Membro à Equipe
+
 **POST** `/api/vinculos`
+
 ```json
 {
   "idProjeto": 1,
@@ -353,10 +382,12 @@ Execute os seguintes requests para popular os usuários base.
 ### 7. Teste de Falhas (Validações)
 
 #### Erro de Banner Inválido
+
 Tente enviar um `banner` que não comece com `data:image/` no endpoint de criação de projeto.
 **Resposta esperada:** 400 - "Regra de Negócio: Formato de imagem inválido..."
 
 #### Erro de Link Obrigatório
+
 Tente criar um projeto omitindo os campos `linkEdital` e `linkInscricaoExterno`.
 **Resposta esperada:** 400 - "Regra de Negócio: Pelo menos um link deve ser fornecido."
 
