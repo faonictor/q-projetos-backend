@@ -17,13 +17,11 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
-    private final UsuarioRepository usuarioRepository;
-    private final JwtService jwtService;
-
-    public OAuth2SuccessHandler(UsuarioRepository usuarioRepository, JwtService jwtService) {
-        this.usuarioRepository = usuarioRepository;
-        this.jwtService = jwtService;
-    }
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+    
+    @Autowired
+    private JwtService jwtService;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
