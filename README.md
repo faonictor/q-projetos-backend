@@ -268,19 +268,24 @@ Execute os seguintes requests para popular os usuários base.
 O sistema possui duas formas de autenticação: **Login Tradicional (Senha)** e **Login Social (Google OAuth2)**.
 
 #### A. Login Tradicional (Admin e Coordenador)
+
 **Acesso:** Envie um `POST` para `/api/auth/login`.
 
 **Exemplo (Login Admin):**
+
 ```json
 {
   "email": "admin@ifpe.edu.br",
   "senha": "admin123"
 }
 ```
+
 **Ação:** Copie o campo `token` da resposta e configure-o como **Bearer Token** no Postman (aba Authorization) ou no Swagger.
 
 #### B. Login Social via Google (Estudantes)
+
 Para testar o fluxo do Google sem o Frontend rodando:
+
 1. Abra o seu **Navegador de Internet** (Chrome, Edge, etc.).
 2. Acesse a URL: `http://localhost:8080/oauth2/authorization/google`
 3. Você será redirecionado para a tela de login do Google. Faça o login com a sua conta do Google/IFPE.
