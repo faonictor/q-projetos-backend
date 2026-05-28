@@ -199,10 +199,14 @@ Após iniciar a aplicação localmente, abra o seu navegador de preferência e a
 * **Testes Diretos ("Try it out"):** Ao clicar em qualquer rota, você verá um botão chamado **"Try it out"**. Ele liberará os campos para você preencher os parâmetros da URL ou o corpo do JSON. Clique em **"Execute"** para enviar a requisição real para o seu banco de dados local e ver a resposta imediatamente.
 * **Consulta de Schemas:** No rodapé da página, a seção *Schemas* mapeia a estrutura exata de dados que a API aceita e devolve, detalhando quais campos são obrigatórios, tipos de dados e regras dos Enums.
 
-### 🔐 Testando Rotas Protegidas (Token JWT)
+### 🔐 Testando Rotas Protegidas (Postman e Swagger)
 
-Quando o sistema de autenticação via Token estiver ativo e bloqueando rotas, você poderá se autenticar diretamente pelo Swagger:
+Quando o sistema de autenticação via Token estiver ativo e bloqueando rotas, você poderá se autenticar diretamente pelo Swagger ou utilizar o Postman.
 
+**Para instruções completas sobre massa de dados (SQL) e exemplos de requisições JSON prontas para uso, consulte o nosso guia oficial de testes:**
+👉 **[Ver o GUIA DE TESTES (GUIA_TESTES.md)](./GUIA_TESTES.md)**
+
+Para testar via Swagger:
 1. Faça a requisição de login (no endpoint correspondente) e copie o token gerado.
 2. Na página do Swagger, clique no botão verde **"Authorize"** localizado no topo superior direito.
 3. Cole o token no campo de texto e clique em **Authorize**.
