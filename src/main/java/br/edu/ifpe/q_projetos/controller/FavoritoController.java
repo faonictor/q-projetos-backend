@@ -1,9 +1,13 @@
 package br.edu.ifpe.q_projetos.controller;
 
-import br.edu.ifpe.q_projetos.model.Favorito;
-import br.edu.ifpe.q_projetos.repository.FavoritoRepository;
+import br.edu.ifpe.q_projetos.DTO.FavoritoDTO;
+import br.edu.ifpe.q_projetos.DTO.FavoritoResponseDTO;
+import br.edu.ifpe.q_projetos.service.FavoritoService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,36 +17,36 @@ import java.util.List;
 public class FavoritoController {
 
     @Autowired
-    private FavoritoRepository favoritoRepository;
+    private FavoritoService service;
 
-    // GET - todos
     @GetMapping
-    public List<Favorito> listarTodos() {
-        return favoritoRepository.findAll();
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<FavoritoResponseDTO>> listarTodos() {
+        return ResponseEntity.ok(service.listarTodos());
     }
 
-    // GET - por ID
+    @GetMapping("/meu-historico")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<FavoritoResponseDTO>> listarMeuHistorico() {
+        return ResponseEntity.ok(service.listarMeuHistorico());
+    }
+
     @GetMapping("/{id}")
-    public ResponseEntity<Favorito> buscarPorId(@PathVariable Long id) {
-        return favoritoRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<FavoritoResponseDTO> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(service.buscarPorId(id));
     }
 
-    // POST - criar favorito (dataRegistro é automático)
     @PostMapping
-    public Favorito salvar(@RequestBody Favorito favorito) {
-        return favoritoRepository.save(favorito);
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<FavoritoResponseDTO> salvar(@Valid @RequestBody FavoritoDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.vincularFavorito(dto));
     }
 
-    // DELETE - remover favorito por ID
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Object> deletar(@PathVariable Long id) {
-        return favoritoRepository.findById(id)
-                .map(f -> {
-                    favoritoRepository.delete(f);
-                    return ResponseEntity.noContent().build();
-                })
-                .orElse(ResponseEntity.notFound().build());
+    @DeleteMapping("/projeto/{idProjeto}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("isAuthenticated()")
+    public void desvincular(@PathVariable Long idProjeto) {
+        service.desvincularFavorito(idProjeto);
     }
 }

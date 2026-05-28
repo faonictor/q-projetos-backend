@@ -61,6 +61,9 @@ public class Projeto {
     @Column(name = "link_edital", length = 500)
     private String linkEdital;
 
+    @Column(name = "link_inscricao_externo", length = 500)
+    private String linkInscricaoExterno;
+
     @Column(nullable = false)
     private Integer vagas;
 
@@ -70,6 +73,17 @@ public class Projeto {
 
     @Column(length = 500)
     private String banner;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status_moderacao", nullable = false, length = 20)
+    @Builder.Default
+    private StatusModeracao statusModeracao = StatusModeracao.PENDENTE;
+
+    public enum StatusModeracao {
+        PENDENTE,
+        PUBLICADO,
+        REPROVADO
+    }
 
     public enum TipoProjeto {
         ENSINO,

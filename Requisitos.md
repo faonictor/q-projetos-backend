@@ -1,4 +1,4 @@
-# Documento de Especificação de Requisitos – Plataforma Q-Projetos
+# Documento de Especificação de Requisitos – Plataforma Q-Projetos (v2.0)
 
 ## Source Q-Projetos
 
@@ -173,3 +173,26 @@ Para que um projeto seja publicado com o status "Aberto", além de preencher uma
 ### **[RN08] - Notificações de Lead (Assíncronas)**
 
 Para cada novo registro na entidade **[ENT02]**, o sistema deve disparar um e-mail ao Coordenador. Esta operação deve ser assíncrona para não impactar a experiência de navegação do estudante (o estudante recebe a confirmação de sucesso enquanto o e-mail é processado em segundo plano).
+
+## 8. Erratas e Atualizações (Versão 2.0)
+
+Esta seção detalha as modificações realizadas no sistema em relação à especificação original para fins de adequação técnica e pedagógica.
+
+### **[ERR01] - Processamento de Imagens (Banner)**
+*   **Original:** [RN06] e [RNF04] previam upload de arquivos físicos e armazenamento no servidor.
+*   **Atualização:** A lógica de upload foi substituída pelo recebimento de imagens em formato **Base64 (Binary)**. As validações de formato (.jpg, .png) e tamanho (2MB) foram mantidas e são processadas diretamente no back-end antes da persistência no banco de dados.
+
+### **[ERR02] - Obrigatoriedade de Link Externo (RN07)**
+*   **Original:** Previa `Link do Edital`, `Link de Inscrição Externo` ou `Upload do Edital`.
+*   **Atualização:** O sistema agora exige obrigatoriamente que pelo menos um dos dois campos de URL (`linkEdital` ou `linkInscricaoExterno`) seja preenchido. A funcionalidade de upload físico de arquivos PDF foi postergada.
+
+### **[ERR03] - Moderação e Status de Inscrição**
+*   **Atualização:** A entidade `Projeto` agora conta com o campo explícito `statusModeracao` (PENDENTE, PUBLICADO, REPROVADO) para atender à **[RN01]**. O status de exibição ("Aberto", "Encerrado", "Aguardando") é calculado dinamicamente em tempo de execução com base nas datas de inscrição, garantindo maior integridade em relação ao tempo real.
+
+### **[ERR04] - Padrões de Implementação e Segurança**
+*   **Injeção de Dependências:** Foi adotado o padrão pedagógico de injeção via campos utilizando a anotação **`@Autowired`**, conforme diretriz de ensino.
+*   **Controle de Acesso:** A segurança das rotas e métodos foi reforçada com o uso da anotação **`@PreAuthorize`**, permitindo um controle granular de permissões (hasRole, hasAnyRole, isAuthenticated) diretamente na camada de Controller.
+
+### **[ERR05] - Notificações (RN08)**
+*   **Status:** A implementação da lógica de envio de e-mail assíncrono foi postergada para sprints futuras, mantendo-se apenas o registro do Lead no banco de dados no momento atual.
+

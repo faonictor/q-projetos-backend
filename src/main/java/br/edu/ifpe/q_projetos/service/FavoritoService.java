@@ -1,58 +1,107 @@
 package br.edu.ifpe.q_projetos.service;
 
+import br.edu.ifpe.q_projetos.DTO.FavoritoDTO;
+import br.edu.ifpe.q_projetos.DTO.FavoritoResponseDTO;
 import br.edu.ifpe.q_projetos.model.Favorito;
+import br.edu.ifpe.q_projetos.model.Projeto;
+import br.edu.ifpe.q_projetos.model.Usuario;
 import br.edu.ifpe.q_projetos.repository.FavoritoRepository;
+import br.edu.ifpe.q_projetos.repository.ProjetoRepository;
+import br.edu.ifpe.q_projetos.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class FavoritoService {
 
     @Autowired
-    private FavoritoRepository favoritoRepository;
+    private FavoritoRepository repository;
+    
+    @Autowired
+    private ProjetoRepository projetoRepository;
+    
+    @Autowired
+    private UsuarioRepository usuarioRepository;
 
-    // Vincular projeto aos favoritos
-    public Favorito vincularFavorito(Long idUsuario, Long idProjeto) {
-        return favoritoRepository.findByIdUsuarioAndIdProjeto(idUsuario, idProjeto)
-                .orElseGet(() -> favoritoRepository.save(new Favorito(idUsuario, idProjeto)));
+    @Transactional
+    public FavoritoResponseDTO vincularFavorito(FavoritoDTO dto) {
+        Long idUsuario = getLoggedUserId();
+        
+        Favorito favorito = repository.findByIdUsuarioAndIdProjeto(idUsuario, dto.getIdProjeto())
+                .orElseGet(() -> repository.save(new Favorito(idUsuario, dto.getIdProjeto())));
+        
+        return toResponseDTO(favorito);
     }
 
-    // Desvincular projeto dos favoritos
-    public void desvincularFavorito(Long idUsuario, Long idProjeto) {
-        favoritoRepository.findByIdUsuarioAndIdProjeto(idUsuario, idProjeto)
-                .ifPresent(favoritoRepository::delete);
+    @Transactional
+    public void desvincularFavorito(Long idProjeto) {
+        Long idUsuario = getLoggedUserId();
+        repository.findByIdUsuarioAndIdProjeto(idUsuario, idProjeto)
+                .ifPresent(repository::delete);
     }
 
-    // Histórico do estudante
-    public List<Favorito> listarHistorico(Long idUsuario) {
-        return favoritoRepository.findByIdUsuario(idUsuario);
+    public List<FavoritoResponseDTO> listarMeuHistorico() {
+        Long idUsuario = getLoggedUserId();
+        return repository.findByIdUsuario(idUsuario).stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
     }
 
-    // CRUD padrão
-    public Favorito salvar(Favorito favorito) {
-        return favoritoRepository.save(favorito);
+    public List<FavoritoResponseDTO> listarTodos() {
+        validarPermissaoAdmin();
+        return repository.findAll().stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
     }
 
-    public List<Favorito> listarTodos() {
-        return favoritoRepository.findAll();
-    }
-
-    public Favorito buscarPorId(Long id) {
-        return favoritoRepository.findById(id)
+    public FavoritoResponseDTO buscarPorId(Long id) {
+        Favorito favorito = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Favorito não encontrado"));
+        
+        Long logadoId = getLoggedUserId();
+        if (!favorito.getIdUsuario().equals(logadoId)) {
+            validarPermissaoAdmin();
+        }
+        
+        return toResponseDTO(favorito);
     }
 
-    public Favorito atualizar(Long id, Favorito favoritoAtualizado) {
-        return favoritoRepository.findById(id).map(favorito -> {
-            favorito.setIdUsuario(favoritoAtualizado.getIdUsuario());
-            favorito.setIdProjeto(favoritoAtualizado.getIdProjeto());
-            return favoritoRepository.save(favorito);
-        }).orElseThrow(() -> new RuntimeException("Favorito não encontrado"));
+    private Long getLoggedUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth.getName().equals("anonymousUser")) {
+            throw new RuntimeException("Acesso negado: Usuário não autenticado.");
+        }
+        Usuario user = usuarioRepository.findByEmail(auth.getName())
+                .orElseThrow(() -> new RuntimeException("Usuário logado não encontrado."));
+        return user.getId();
     }
 
-    public void deletar(Long id) {
-        favoritoRepository.deleteById(id);
+    private void validarPermissaoAdmin() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        if (!isAdmin) {
+            throw new RuntimeException("Acesso negado: Ação exclusiva para administradores.");
+        }
+    }
+
+    private FavoritoResponseDTO toResponseDTO(Favorito favorito) {
+        Projeto projeto = projetoRepository.findById(favorito.getIdProjeto())
+                .orElse(null);
+        
+        return FavoritoResponseDTO.builder()
+                .id(favorito.getId())
+                .idUsuario(favorito.getIdUsuario())
+                .idProjeto(favorito.getIdProjeto())
+                .tituloProjeto(projeto != null ? projeto.getTitulo() : "Projeto não encontrado")
+                .bannerProjeto(projeto != null ? projeto.getBanner() : null)
+                .dataRegistro(favorito.getDataRegistro())
+                .build();
     }
 }

@@ -39,6 +39,9 @@ public class ProjetoCreateDTO {
     @Size(max = 500, message = "O link do edital é muito longo.")
     private String linkEdital;
 
+    @Size(max = 500, message = "O link de inscrição externo é muito longo.")
+    private String linkInscricaoExterno;
+
     @NotNull(message = "A quantidade de vagas é obrigatória.")
     @Min(value = 0, message = "A quantidade de vagas não pode ser negativa.")
     private Integer vagas;
