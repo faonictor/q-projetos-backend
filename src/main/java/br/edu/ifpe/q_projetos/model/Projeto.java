@@ -12,7 +12,9 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -61,6 +63,9 @@ public class Projeto {
     @Column(name = "link_edital", length = 500)
     private String linkEdital;
 
+    @Column(name = "link_inscricao_externo", length = 500)
+    private String linkInscricaoExterno;
+
     @Column(nullable = false)
     private Integer vagas;
 
@@ -68,8 +73,21 @@ public class Projeto {
     @Column(nullable = false, length = 20)
     private ModalidadeProjeto modalidade;
 
-    @Column(length = 500)
+    @Lob
+    @Column(columnDefinition = "MEDIUMTEXT")
+    @Size(max = 8000000, message = "Imagem muito grande")
     private String banner;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status_moderacao", nullable = false, length = 20)
+    @Builder.Default
+    private StatusModeracao statusModeracao = StatusModeracao.PENDENTE;
+
+    public enum StatusModeracao {
+        PENDENTE,
+        PUBLICADO,
+        REPROVADO
+    }
 
     public enum TipoProjeto {
         ENSINO,

@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,18 +41,18 @@ public class ProjetoController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ProjetoResponseDTO> buscarPorId(@PathVariable("id") Long id) {
-        // O Optional foi removido aqui porque o Service já lança exceção se não achar
         return ResponseEntity.ok(service.buscarPorId(id));
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'COORD')")
     public ResponseEntity<ProjetoResponseDTO> criar(@Valid @RequestBody ProjetoCreateDTO dto) {
-        // O @Valid aciona as validações que configuramos no DTO
         ProjetoResponseDTO projetoSalvo = service.salvar(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(projetoSalvo);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'COORD')")
     public ResponseEntity<ProjetoResponseDTO> atualizar(
             @PathVariable Long id,
             @Valid @RequestBody ProjetoUpdateDTO dto
@@ -60,8 +61,21 @@ public class ProjetoController {
         return ResponseEntity.ok(projetoAtualizado);
     }
 
+    @PostMapping("/{id}/aprovar")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ProjetoResponseDTO> aprovar(@PathVariable Long id) {
+        return ResponseEntity.ok(service.aprovarProjeto(id));
+    }
+
+    @PostMapping("/{id}/reprovar")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ProjetoResponseDTO> reprovar(@PathVariable Long id) {
+        return ResponseEntity.ok(service.reprovarProjeto(id));
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAnyRole('ADMIN', 'COORD')")
     public void deletar(@PathVariable Long id) {
         service.deletar(id);
     }
@@ -70,13 +84,17 @@ public class ProjetoController {
 
     @GetMapping("/buscar")
     public ResponseEntity<List<ProjetoResponseDTO>> buscarPorTexto(@RequestParam("texto") String texto) {
-        // Nota: O método no Service precisará ser ajustado para retornar ProjetoResponseDTO
         return ResponseEntity.ok(service.buscarPorTexto(texto));
+    }
+
+    @GetMapping("/meus-projetos")
+    @PreAuthorize("hasAnyRole('ADMIN', 'COORD')")
+    public ResponseEntity<List<ProjetoResponseDTO>> listarMeusProjetos() {
+        return ResponseEntity.ok(service.listarMeusProjetos());
     }
 
     @GetMapping("/tipo")
     public ResponseEntity<List<ProjetoResponseDTO>> buscarPorTipo(@RequestParam("tipo") TipoProjeto tipo) {
-        // Nota: O método no Service precisará ser ajustado para retornar ProjetoResponseDTO
         return ResponseEntity.ok(service.buscarPorTipo(tipo));
     }
 
@@ -84,8 +102,6 @@ public class ProjetoController {
     public ResponseEntity<List<ProjetoResponseDTO>> buscarPorStatus(
             @RequestParam ProjetoResponseDTO.StatusInscricao status
     ) {
-        // Como o status agora é dinâmico (não está mais no banco), este endpoint 
-        // chamará a lógica correspondente no Service baseada nas datas.
         return ResponseEntity.ok(service.buscarPorStatus(status));
     }
 }

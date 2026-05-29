@@ -39,6 +39,9 @@ public class ProjetoCreateDTO {
     @Size(max = 500, message = "O link do edital é muito longo.")
     private String linkEdital;
 
+    @Size(max = 500, message = "O link de inscrição externo é muito longo.")
+    private String linkInscricaoExterno;
+
     @NotNull(message = "A quantidade de vagas é obrigatória.")
     @Min(value = 0, message = "A quantidade de vagas não pode ser negativa.")
     private Integer vagas;
@@ -46,7 +49,7 @@ public class ProjetoCreateDTO {
     @NotNull(message = "A modalidade (BOLSISTA, VOLUNTARIO ou AMBOS) é obrigatória.")
     private ModalidadeProjeto modalidade;
 
-    @Size(max = 500, message = "O caminho do banner é muito longo.")
+    @Size(max = 8000000, message = "O caminho do banner é muito longo.")
     private String banner;
 
     private Long idCoordenadorManual; // Opcional, usado apenas por Admins

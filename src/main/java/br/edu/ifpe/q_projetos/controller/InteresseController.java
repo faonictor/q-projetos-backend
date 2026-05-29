@@ -1,10 +1,13 @@
 package br.edu.ifpe.q_projetos.controller;
 
-import br.edu.ifpe.q_projetos.model.Interesse;
+import br.edu.ifpe.q_projetos.DTO.InteresseDTO;
+import br.edu.ifpe.q_projetos.DTO.InteresseResponseDTO;
 import br.edu.ifpe.q_projetos.service.InteresseService;
-
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,38 +20,33 @@ public class InteresseController {
     private InteresseService service;
 
     @GetMapping
-    public List<Interesse> listarTodos() {
-        return service.listarTodos();
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<InteresseResponseDTO>> listarTodos() {
+        return ResponseEntity.ok(service.listarTodos());
     }
 
     @GetMapping("/{id}")
-    public Interesse buscarPorId(@PathVariable("id") Long id) {
-        return service.buscarPorId(id);
+    @PreAuthorize("hasAnyRole('ADMIN', 'COORD')")
+    public ResponseEntity<InteresseResponseDTO> buscarPorId(@PathVariable("id") Long id) {
+        return ResponseEntity.ok(service.buscarPorId(id));
     }
 
     @PostMapping
-    public Interesse salvar(@RequestBody Interesse interesse) {
-        return service.salvar(interesse);
-    }
-
-    @PutMapping("/{id}")
-    public Interesse atualizar(
-            @PathVariable Long id,
-            @RequestBody Interesse interesse) {
-
-        return service.atualizar(id, interesse);
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<InteresseResponseDTO> salvar(@Valid @RequestBody InteresseDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.salvar(dto));
     }
 
     @GetMapping("/projeto/{projetoId}")
-    public ResponseEntity<List<Interesse>> listarLeadsPorProjeto(
+    @PreAuthorize("hasAnyRole('ADMIN', 'COORD')")
+    public ResponseEntity<List<InteresseResponseDTO>> listarLeadsPorProjeto(
             @PathVariable("projetoId") Long projetoId) {
-
-        List<Interesse> leads = service.listarLeadsPorProjeto(projetoId);
-
-        return ResponseEntity.ok(leads);
+        return ResponseEntity.ok(service.listarLeadsPorProjeto(projetoId));
     }
     
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAnyRole('ADMIN', 'COORD')")
     public void deletar(@PathVariable Long id) {
         service.deletar(id);
     }

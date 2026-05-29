@@ -9,4 +9,5 @@ public interface InteresseRepository extends JpaRepository<Interesse, Long> {
 
   List<Interesse> findByProjetoId(Long projetoId);
 
+  boolean existsByEmailAndProjetoId(String email, Long projetoId);
 }
