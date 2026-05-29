@@ -8,6 +8,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
+// Classe para popular o banco de dados com um usuário administrador inicial
+
 @Component
 public class DataSeeder implements CommandLineRunner {
 
