@@ -67,6 +67,12 @@ public class ProjetoController {
         return ResponseEntity.ok(service.aprovarProjeto(id));
     }
 
+    @PostMapping("/{id}/reprovar")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ProjetoResponseDTO> reprovar(@PathVariable Long id) {
+        return ResponseEntity.ok(service.reprovarProjeto(id));
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAnyRole('ADMIN', 'COORD')")
@@ -79,6 +85,12 @@ public class ProjetoController {
     @GetMapping("/buscar")
     public ResponseEntity<List<ProjetoResponseDTO>> buscarPorTexto(@RequestParam("texto") String texto) {
         return ResponseEntity.ok(service.buscarPorTexto(texto));
+    }
+
+    @GetMapping("/meus-projetos")
+    @PreAuthorize("hasAnyRole('ADMIN', 'COORD')")
+    public ResponseEntity<List<ProjetoResponseDTO>> listarMeusProjetos() {
+        return ResponseEntity.ok(service.listarMeusProjetos());
     }
 
     @GetMapping("/tipo")

@@ -1,6 +1,7 @@
 package br.edu.ifpe.q_projetos.controller;
 
 import br.edu.ifpe.q_projetos.DTO.UsuarioCreateDTO;
+import br.edu.ifpe.q_projetos.DTO.UsuarioPerfilUpdateDTO;
 import br.edu.ifpe.q_projetos.DTO.UsuarioResponseDTO;
 import br.edu.ifpe.q_projetos.DTO.UsuarioUpdateDTO;
 import br.edu.ifpe.q_projetos.service.UsuarioService;
@@ -39,12 +40,18 @@ public class UsuarioController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UsuarioResponseDTO> atualizar(
             @PathVariable Long id,
             @Valid @RequestBody UsuarioUpdateDTO dto
     ) {
         return ResponseEntity.ok(service.atualizarUsuario(id, dto));
+    }
+
+    @PutMapping("/perfil")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<UsuarioResponseDTO> atualizarPerfil(@Valid @RequestBody UsuarioPerfilUpdateDTO dto) {
+        return ResponseEntity.ok(service.atualizarPerfil(dto));
     }
 
     @DeleteMapping("/{id}")

@@ -4,7 +4,7 @@ import br.edu.ifpe.q_projetos.model.Usuario.Role;
 import br.edu.ifpe.q_projetos.model.Usuario.Vinculo;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+// import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
@@ -29,6 +29,6 @@ public class UsuarioCreateDTO {
     // A Role não precisa de validação estrita aqui, pois o Service força ROLE_USER se for nula/inválida
     private Role role;
 
-    @NotNull(message = "O vínculo (SERVIDOR ou ESTUDANTE) é obrigatório.")
+    // @NotNull(message = "O vínculo (SERVIDOR ou ESTUDANTE) é obrigatório.")
     private Vinculo vinculo;
 }

@@ -49,7 +49,7 @@ public class ProjetoCreateDTO {
     @NotNull(message = "A modalidade (BOLSISTA, VOLUNTARIO ou AMBOS) é obrigatória.")
     private ModalidadeProjeto modalidade;
 
-    @Size(max = 500, message = "O caminho do banner é muito longo.")
+    @Size(max = 8000000, message = "O caminho do banner é muito longo.")
     private String banner;
 
     private Long idCoordenadorManual; // Opcional, usado apenas por Admins

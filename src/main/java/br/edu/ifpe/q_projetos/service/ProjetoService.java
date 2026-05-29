@@ -125,6 +125,15 @@ public class ProjetoService {
         return toResponseDTO(repository.save(projeto));
     }
 
+    @Transactional
+    public ProjetoResponseDTO reprovarProjeto(Long id) {
+        validarPermissaoAdmin();
+        Projeto projeto = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Projeto não encontrado"));
+        projeto.setStatusModeracao(Projeto.StatusModeracao.REPROVADO);
+        return toResponseDTO(repository.save(projeto));
+    }
+
     public void deletar(Long id) {
         if (!repository.existsById(id)) {
             throw new RuntimeException("Projeto não encontrado com o ID: " + id);
@@ -173,6 +182,20 @@ public class ProjetoService {
                 .collect(Collectors.toList());
     }
 
+    public List<ProjetoResponseDTO> listarMeusProjetos() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth.getName().equals("anonymousUser")) {
+            throw new RuntimeException("Acesso negado: Usuário não autenticado.");
+        }
+
+        Usuario logado = usuarioRepository.findByEmail(auth.getName())
+                .orElseThrow(() -> new RuntimeException("Usuário logado não encontrado."));
+
+        return repository.findProjetosByCoordenador(logado.getId()).stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
     // --- MÉTODOS AUXILIARES E REGRAS DE NEGÓCIO ---
 
     private void validarDatas(LocalDate inicio, LocalDate fim, LocalDate inscInicio, LocalDate inscFim) {
@@ -195,12 +218,20 @@ public class ProjetoService {
                 .orElseThrow(() -> new RuntimeException("Usuário logado não encontrado no banco de dados."));
 
         Long idFinalDoCoordenador = logado.getId();
+        Usuario coordenadorFinal = logado;
 
         boolean isAdmin = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
         if (idCoordenadorManual != null && isAdmin) {
             idFinalDoCoordenador = idCoordenadorManual;
+            coordenadorFinal = usuarioRepository.findById(idCoordenadorManual)
+                    .orElseThrow(() -> new RuntimeException("Coordenador manual não encontrado."));
+        }
+
+        // Validação de Segurança: O coordenador de um projeto DEVE ser um SERVIDOR
+        if (!Usuario.Vinculo.SERVIDOR.equals(coordenadorFinal.getVinculo())) {
+            throw new RuntimeException("Regra de Negócio: Apenas usuários com vínculo SERVIDOR podem ser coordenadores de projetos.");
         }
 
         VinculoEquipe vinculo = new VinculoEquipe();
