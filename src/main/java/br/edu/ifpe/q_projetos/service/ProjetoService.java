@@ -107,6 +107,10 @@ public class ProjetoService {
             projeto.setDataInicio(dto.getDataInicio());
         if (dto.getDataTermino() != null)
             projeto.setDataTermino(dto.getDataTermino());
+        if (dto.getDataInicioInscricao() != null)
+            projeto.setDataInicioInscricao(dto.getDataInicioInscricao());
+        if (dto.getDataFimInscricao() != null)
+            projeto.setDataFimInscricao(dto.getDataFimInscricao());
 
         // RN12: Alterações em campos estruturais retornam o projeto ao status PENDENTE
         if (estruturalAlterado) {
