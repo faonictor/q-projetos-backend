@@ -244,7 +244,7 @@ Execute os seguintes requests para popular os usuários base.
   "nome": "Professor Coordenador",
   "email": "coordenador@ifpe.edu.br",
   "senha": "admin123",
-  "role": "ROLE_USER",
+  "role": "ROLE_COORD",
   "vinculo": "SERVIDOR"
 }
 ```
@@ -325,6 +325,10 @@ Para testar o fluxo do Google sem o Frontend rodando:
 
 **POST** `/api/projetos/1/aprovar`
 
+#### Reprovar Projeto (Logado como Admin)
+
+**POST** `/api/projetos/1/reprovar`
+
 ---
 
 ### 4. Leads de Interesse (Logado como Estudante)
@@ -367,7 +371,34 @@ Para testar o fluxo do Google sem o Frontend rodando:
 
 ---
 
-### 6. Equipe (Logado como Coordenador do Projeto)
+### 6. Perfil e Gestão de Usuários
+
+#### Atualizar Meu Perfil (Logado)
+
+**PUT** `/api/usuarios/perfil`
+
+```json
+{
+  "nome": "Meu Nome Atualizado",
+  "email": "meuemail@ifpe.edu.br",
+  "senha": "novasenha123"
+}
+```
+
+#### Gestão Administrativa (Logado como Admin)
+
+**PUT** `/api/usuarios/{id}`
+
+```json
+{
+  "role": "ROLE_COORD",
+  "vinculo": "SERVIDOR"
+}
+```
+
+---
+
+### 7. Equipe (Logado como Coordenador do Projeto)
 
 #### Adicionar Membro à Equipe
 
@@ -384,7 +415,7 @@ Para testar o fluxo do Google sem o Frontend rodando:
 
 ---
 
-### 7. Teste de Falhas (Validações)
+### 8. Teste de Falhas (Validações)
 
 #### Erro de Banner Inválido
 
