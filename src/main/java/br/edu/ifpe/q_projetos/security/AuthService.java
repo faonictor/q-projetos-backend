@@ -6,8 +6,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import br.edu.ifpe.q_projetos.DTO.UsuarioCreateDTO;
-import br.edu.ifpe.q_projetos.DTO.UsuarioResponseDTO;
+import br.edu.ifpe.q_projetos.dto.UsuarioCreateDTO;
+import br.edu.ifpe.q_projetos.dto.UsuarioResponseDTO;
 import br.edu.ifpe.q_projetos.model.Usuario;
 import br.edu.ifpe.q_projetos.repository.UsuarioRepository;
 

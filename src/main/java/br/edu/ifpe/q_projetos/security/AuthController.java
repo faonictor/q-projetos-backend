@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.edu.ifpe.q_projetos.DTO.LoginRequest;
-import br.edu.ifpe.q_projetos.DTO.UsuarioCreateDTO;
-import br.edu.ifpe.q_projetos.DTO.UsuarioResponseDTO;
+import br.edu.ifpe.q_projetos.dto.LoginRequest;
+import br.edu.ifpe.q_projetos.dto.UsuarioCreateDTO;
+import br.edu.ifpe.q_projetos.dto.UsuarioResponseDTO;
 import br.edu.ifpe.q_projetos.model.Usuario;
 import jakarta.validation.Valid;
 

@@ -1,6 +1,6 @@
 package br.edu.ifpe.q_projetos.service;
 
-import br.edu.ifpe.q_projetos.DTO.*;
+import br.edu.ifpe.q_projetos.dto.*;
 import br.edu.ifpe.q_projetos.model.*;
 import br.edu.ifpe.q_projetos.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;

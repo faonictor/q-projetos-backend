@@ -16,9 +16,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.edu.ifpe.q_projetos.DTO.UsuarioCreateDTO;
-import br.edu.ifpe.q_projetos.DTO.UsuarioResponseDTO;
-import br.edu.ifpe.q_projetos.DTO.UsuarioUpdateDTO;
+import br.edu.ifpe.q_projetos.dto.UsuarioCreateDTO;
+import br.edu.ifpe.q_projetos.dto.UsuarioResponseDTO;
+import br.edu.ifpe.q_projetos.dto.UsuarioUpdateDTO;
 import br.edu.ifpe.q_projetos.service.UsuarioService;
 import jakarta.validation.Valid;
 
