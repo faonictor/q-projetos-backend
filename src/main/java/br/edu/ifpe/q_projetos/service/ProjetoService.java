@@ -345,7 +345,9 @@ public class ProjetoService {
         LocalDate hoje = LocalDate.now();
         ProjetoResponseDTO.StatusInscricao status;
 
-        if (hoje.isBefore(projeto.getDataInicioInscricao())) {
+        if (projeto.getDataInicioInscricao() == null || projeto.getDataFimInscricao() == null) {
+            status = ProjetoResponseDTO.StatusInscricao.ENCERRADA;
+        } else if (hoje.isBefore(projeto.getDataInicioInscricao())) {
             status = ProjetoResponseDTO.StatusInscricao.AGUARDANDO;
         } else if (hoje.isAfter(projeto.getDataFimInscricao())) {
             status = ProjetoResponseDTO.StatusInscricao.ENCERRADA;
