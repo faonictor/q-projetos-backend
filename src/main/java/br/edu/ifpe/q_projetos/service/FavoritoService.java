@@ -1,7 +1,7 @@
 package br.edu.ifpe.q_projetos.service;
 
-import br.edu.ifpe.q_projetos.DTO.FavoritoDTO;
-import br.edu.ifpe.q_projetos.DTO.FavoritoResponseDTO;
+import br.edu.ifpe.q_projetos.dto.FavoritoDTO;
+import br.edu.ifpe.q_projetos.dto.FavoritoResponseDTO;
 import br.edu.ifpe.q_projetos.model.Favorito;
 import br.edu.ifpe.q_projetos.model.Projeto;
 import br.edu.ifpe.q_projetos.model.Usuario;

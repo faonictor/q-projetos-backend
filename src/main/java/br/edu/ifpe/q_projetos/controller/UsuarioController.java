@@ -1,9 +1,9 @@
 package br.edu.ifpe.q_projetos.controller;
 
-import br.edu.ifpe.q_projetos.DTO.UsuarioCreateDTO;
-import br.edu.ifpe.q_projetos.DTO.UsuarioPerfilUpdateDTO;
-import br.edu.ifpe.q_projetos.DTO.UsuarioResponseDTO;
-import br.edu.ifpe.q_projetos.DTO.UsuarioUpdateDTO;
+import br.edu.ifpe.q_projetos.dto.UsuarioCreateDTO;
+import br.edu.ifpe.q_projetos.dto.UsuarioPerfilUpdateDTO;
+import br.edu.ifpe.q_projetos.dto.UsuarioResponseDTO;
+import br.edu.ifpe.q_projetos.dto.UsuarioUpdateDTO;
 import br.edu.ifpe.q_projetos.service.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;

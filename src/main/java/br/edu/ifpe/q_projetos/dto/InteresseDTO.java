@@ -1,4 +1,4 @@
-package br.edu.ifpe.q_projetos.DTO;
+package br.edu.ifpe.q_projetos.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

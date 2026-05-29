@@ -1,7 +1,7 @@
 package br.edu.ifpe.q_projetos.controller;
 
-import br.edu.ifpe.q_projetos.DTO.FavoritoDTO;
-import br.edu.ifpe.q_projetos.DTO.FavoritoResponseDTO;
+import br.edu.ifpe.q_projetos.dto.FavoritoDTO;
+import br.edu.ifpe.q_projetos.dto.FavoritoResponseDTO;
 import br.edu.ifpe.q_projetos.service.FavoritoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;

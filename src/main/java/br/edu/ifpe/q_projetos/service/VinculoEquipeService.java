@@ -1,7 +1,7 @@
 package br.edu.ifpe.q_projetos.service;
 
-import br.edu.ifpe.q_projetos.DTO.VinculoEquipeDTO;
-import br.edu.ifpe.q_projetos.DTO.VinculoEquipeResponseDTO;
+import br.edu.ifpe.q_projetos.dto.VinculoEquipeDTO;
+import br.edu.ifpe.q_projetos.dto.VinculoEquipeResponseDTO;
 import br.edu.ifpe.q_projetos.model.*;
 import br.edu.ifpe.q_projetos.repository.*;
 import br.edu.ifpe.q_projetos.exception.RecursoNaoEncontradoException;
