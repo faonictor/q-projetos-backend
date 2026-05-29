@@ -42,6 +42,7 @@ Thumbs.db
 ehthumbs.db
 $RECYCLE.BIN/
 .editorconfig
+.editorconfig
 
 # Logs gerados pelo Spring Boot ou Java
 *.log
@@ -58,3 +59,4 @@ application-dev.yml
 # Arquivos temporários e de crash do Java
 hs_err_pid*
 replay_pid*
+

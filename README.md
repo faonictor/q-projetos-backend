@@ -69,8 +69,12 @@ spring.datasource.password=sua_senha_local
 * **Via Terminal:** Execute o comando:
 
 ```bash
-mvn spring-boot:run
+mvn spring-boot:run -Dspring.profiles.active=dev
 ```
+> [!IMPORTANT]  
+> Agora é necessário especificar o perfil `dev` para ativar as configurações de desenvolvimento.
+> Ajuste o arquivo application-dev.properties se precisar.
+
 
 Se tudo der certo, você verá o logotipo do Spring no terminal e a mensagem indicando que a aplicação iniciou na porta **8080**.
 
@@ -428,3 +432,4 @@ Tente criar um projeto omitindo os campos `linkEdital` e `linkInscricaoExterno`.
 **Resposta esperada:** 400 - "Regra de Negócio: Pelo menos um link deve ser fornecido."
 
 ***Desenvolvido com dedicação pela equipe do IFPE - Afogados da Ingazeira.***
+
