@@ -1,4 +1,4 @@
-package br.edu.ifpe.q_projetos.DTO;
+package br.edu.ifpe.q_projetos.dto;
 
 import br.edu.ifpe.q_projetos.model.VinculoEquipe.Papel;
 import jakarta.validation.constraints.NotNull;

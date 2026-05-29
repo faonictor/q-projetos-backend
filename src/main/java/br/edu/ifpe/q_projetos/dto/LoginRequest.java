@@ -1,3 +1,3 @@
-package br.edu.ifpe.q_projetos.DTO;
+package br.edu.ifpe.q_projetos.dto;
 
 public record LoginRequest(String email, String senha) {}

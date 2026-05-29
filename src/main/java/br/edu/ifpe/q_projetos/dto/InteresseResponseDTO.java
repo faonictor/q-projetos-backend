@@ -1,4 +1,4 @@
-package br.edu.ifpe.q_projetos.DTO;
+package br.edu.ifpe.q_projetos.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

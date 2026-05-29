@@ -1,7 +1,7 @@
 package br.edu.ifpe.q_projetos.controller;
 
-import br.edu.ifpe.q_projetos.DTO.VinculoEquipeDTO;
-import br.edu.ifpe.q_projetos.DTO.VinculoEquipeResponseDTO;
+import br.edu.ifpe.q_projetos.dto.VinculoEquipeDTO;
+import br.edu.ifpe.q_projetos.dto.VinculoEquipeResponseDTO;
 import br.edu.ifpe.q_projetos.service.VinculoEquipeService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
