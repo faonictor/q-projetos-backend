@@ -120,7 +120,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"nome\": \"Administrador Geral\",\n  \"email\": \"admin@ifpe.edu.br\",\n  \"senha\": \"admin123\",\n  \"role\": \"ROLE_ADMIN\",\n  \"vinculo\": \"SERVIDOR\"\n}",
+							"raw": "{\n  \"nome\": \"Administrador Geral\",\n  \"email\": \"admin@ifpe.edu.br\",\n  \"senha\": \"admin123\",\n  \"role\": \"ROLE_USER\",\n  \"vinculo\": \"SERVIDOR\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -137,7 +137,8 @@
 								"auth",
 								"register"
 							]
-						}
+						},
+						"description": "Nota: Todo cadastro inicial deve ser feito como ROLE_USER. Para que um usuário se torne Administrador, outro Administrador já existente deve alterar seu papel manualmente."
 					},
 					"response": []
 				},
@@ -148,7 +149,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"nome\": \"Professor Coordenador\",\n  \"email\": \"coordenador@ifpe.edu.br\",\n  \"senha\": \"admin123\",\n  \"role\": \"ROLE_COORD\",\n  \"vinculo\": \"SERVIDOR\"\n}",
+							"raw": "{\n  \"nome\": \"Professor Coordenador\",\n  \"email\": \"coordenador@ifpe.edu.br\",\n  \"senha\": \"admin123\",\n  \"role\": \"ROLE_USER\",\n  \"vinculo\": \"SERVIDOR\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -165,7 +166,8 @@
 								"auth",
 								"register"
 							]
-						}
+						},
+						"description": "Nota: Todo cadastro inicial deve ser feito como ROLE_USER. Para que um servidor se torne Coordenador, um Administrador deve alterar seu papel manualmente para ROLE_COORD através do endpoint de atualização de usuário."
 					},
 					"response": []
 				},
@@ -194,7 +196,7 @@
 								"register"
 							]
 						},
-						"description": "Nota: Todo cadastro inicial deve ser feito como ROLE_USER. Para que um servidor se torne Coordenador, um Administrador deve alterar seu papel manualmente para ROLE_COORD através do endpoint de atualização de usuário."
+						"description": "Nota: Todo cadastro inicial deve ser feito como ROLE_USER."
 					},
 					"response": []
 				}
