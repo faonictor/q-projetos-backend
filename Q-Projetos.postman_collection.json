@@ -183,13 +183,6 @@
 								}
 							}
 						},
-						"description": "Nota: Todo cadastro inicial deve ser feito como ROLE_USER. Para que um servidor se torne Coordenador, um Administrador deve alterar seu papel manualmente para ROLE_COORD através do endpoint de atualização de usuário.",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
 						"url": {
 							"raw": "{{base_url}}/api/auth/register",
 							"host": [
@@ -200,7 +193,8 @@
 								"auth",
 								"register"
 							]
-						}
+						},
+						"description": "Nota: Todo cadastro inicial deve ser feito como ROLE_USER. Para que um servidor se torne Coordenador, um Administrador deve alterar seu papel manualmente para ROLE_COORD através do endpoint de atualização de usuário."
 					},
 					"response": []
 				}
