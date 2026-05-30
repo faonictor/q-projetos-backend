@@ -183,6 +183,13 @@
 								}
 							}
 						},
+						"description": "Nota: Todo cadastro inicial deve ser feito como ROLE_USER. Para que um servidor se torne Coordenador, um Administrador deve alterar seu papel manualmente para ROLE_COORD através do endpoint de atualização de usuário.",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
 						"url": {
 							"raw": "{{base_url}}/api/auth/register",
 							"host": [
@@ -322,6 +329,26 @@
 								"reprovar"
 							]
 						}
+					},
+					"response": []
+				},
+				{
+					"name": "Deletar Projeto",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/projetos/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"projetos",
+								"1"
+							]
+						},
+						"description": "Nota: Apenas usuários com ROLE_ADMIN podem deletar projetos. Além disso, o projeto só pode ser deletado se o seu status for REPROVADO."
 					},
 					"response": []
 				}
