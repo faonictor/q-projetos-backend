@@ -120,7 +120,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"nome\": \"Administrador Geral\",\n  \"email\": \"admin@ifpe.edu.br\",\n  \"senha\": \"admin123\",\n  \"role\": \"ROLE_USER\",\n  \"vinculo\": \"SERVIDOR\"\n}",
+							"raw": "{\n  \"nome\": \"Administrador Geral\",\n  \"email\": \"admin@ifpe.edu.br\",\n  \"senha\": \"admin123\",\n  \"role\": \"ROLE_ADMIN\",\n  \"vinculo\": \"SERVIDOR\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -138,7 +138,7 @@
 								"register"
 							]
 						},
-						"description": "Nota: Todo cadastro inicial deve ser feito como ROLE_USER. Para que um usuário se torne Administrador, outro Administrador já existente deve alterar seu papel manualmente."
+						"description": "Nota: Representação da função administrativa. Dependendo da configuração do backend, o papel pode ser ignorado e salvo como ROLE_USER por padrão, exigindo ativação manual por outro Admin."
 					},
 					"response": []
 				},
@@ -167,7 +167,7 @@
 								"register"
 							]
 						},
-						"description": "Nota: Todo cadastro inicial deve ser feito como ROLE_USER. Para que um servidor se torne Coordenador, um Administrador deve alterar seu papel manualmente para ROLE_COORD através do endpoint de atualização de usuário."
+						"description": "Nota: Todo cadastro inicial deve ser feito como ROLE_USER para evitar confusão. Para que um servidor se torne Coordenador, um Administrador deve alterar seu papel manualmente para ROLE_COORD através do endpoint de atualização de usuário."
 					},
 					"response": []
 				},
