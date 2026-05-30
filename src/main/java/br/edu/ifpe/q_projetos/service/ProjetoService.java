@@ -139,11 +139,14 @@ public class ProjetoService {
     }
 
     public void deletar(Long id) {
-        if (!repository.existsById(id)) {
-            throw new RuntimeException("Projeto não encontrado com o ID: " + id);
+        validarPermissaoAdmin();
+        Projeto projeto = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Projeto não encontrado com o ID: " + id));
+
+        if (!Projeto.StatusModeracao.REPROVADO.equals(projeto.getStatusModeracao())) {
+            throw new RuntimeException("Regra de Negócio: Somente projetos com status REPROVADO podem ser excluídos.");
         }
 
-        validarPermissaoEdicao(id);
         repository.deleteById(id);
     }
 

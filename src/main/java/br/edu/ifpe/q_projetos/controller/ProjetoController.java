@@ -75,7 +75,7 @@ public class ProjetoController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAnyRole('ADMIN', 'COORD')")
+    @PreAuthorize("hasRole('ADMIN')")
     public void deletar(@PathVariable Long id) {
         service.deletar(id);
     }
