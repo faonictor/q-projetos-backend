@@ -173,3 +173,5 @@ Para que um projeto seja publicado com o status "Aberto", além de preencher uma
 ### **[RN08] - Notificações de Lead (Assíncronas)**
 
 Para cada novo registro na entidade **[ENT02]**, o sistema deve disparar um e-mail ao Coordenador. Esta operação deve ser assíncrona para não impactar a experiência de navegação do estudante (o estudante recebe a confirmação de sucesso enquanto o e-mail é processado em segundo plano).
+
+## teste
