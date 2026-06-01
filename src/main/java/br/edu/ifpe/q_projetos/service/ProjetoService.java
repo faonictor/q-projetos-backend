@@ -1,8 +1,11 @@
 package br.edu.ifpe.q_projetos.service;
 
 import br.edu.ifpe.q_projetos.dto.*;
+import br.edu.ifpe.q_projetos.exception.RegraNegocioException;
+import br.edu.ifpe.q_projetos.exception.RecursoNaoEncontradoException;
 import br.edu.ifpe.q_projetos.model.*;
 import br.edu.ifpe.q_projetos.repository.*;
+import br.edu.ifpe.q_projetos.security.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -35,7 +38,7 @@ public class ProjetoService {
 
     public ProjetoResponseDTO buscarPorId(Long id) {
         Projeto projeto = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Projeto não encontrado com o ID: " + id));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Projeto não encontrado com o ID: " + id));
         return toResponseDTO(projeto);
     }
 
@@ -69,7 +72,7 @@ public class ProjetoService {
     @Transactional
     public ProjetoResponseDTO atualizar(Long id, ProjetoUpdateDTO dto) {
         Projeto projeto = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Projeto não encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Projeto não encontrado"));
 
         // Validação de Segurança: Somente o coordenador ou ADMIN pode editar
         validarPermissaoEdicao(id);
@@ -124,7 +127,7 @@ public class ProjetoService {
     public ProjetoResponseDTO aprovarProjeto(Long id) {
         validarPermissaoAdmin();
         Projeto projeto = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Projeto não encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Projeto não encontrado"));
         projeto.setStatusModeracao(Projeto.StatusModeracao.PUBLICADO);
         return toResponseDTO(repository.save(projeto));
     }
@@ -133,7 +136,7 @@ public class ProjetoService {
     public ProjetoResponseDTO reprovarProjeto(Long id) {
         validarPermissaoAdmin();
         Projeto projeto = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Projeto não encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Projeto não encontrado"));
         projeto.setStatusModeracao(Projeto.StatusModeracao.REPROVADO);
         return toResponseDTO(repository.save(projeto));
     }
@@ -141,10 +144,10 @@ public class ProjetoService {
     public void deletar(Long id) {
         validarPermissaoAdmin();
         Projeto projeto = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Projeto não encontrado com o ID: " + id));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Projeto não encontrado com o ID: " + id));
 
         if (!Projeto.StatusModeracao.REPROVADO.equals(projeto.getStatusModeracao())) {
-            throw new RuntimeException("Regra de Negócio: Somente projetos com status REPROVADO podem ser excluídos.");
+            throw new RegraNegocioException("Regra de Negócio: Somente projetos com status REPROVADO podem ser excluídos.");
         }
 
         repository.deleteById(id);
@@ -190,14 +193,7 @@ public class ProjetoService {
     }
 
     public List<ProjetoResponseDTO> listarMeusProjetos() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || auth.getName().equals("anonymousUser")) {
-            throw new RuntimeException("Acesso negado: Usuário não autenticado.");
-        }
-
-        Usuario logado = usuarioRepository.findByEmail(auth.getName())
-                .orElseThrow(() -> new RuntimeException("Usuário logado não encontrado."));
-
+        Usuario logado = SecurityUtils.getLoggedUser(usuarioRepository);
         return repository.findProjetosByCoordenador(logado.getId()).stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
@@ -207,115 +203,16 @@ public class ProjetoService {
 
     private void validarDatas(LocalDate inicio, LocalDate fim, LocalDate inscInicio, LocalDate inscFim) {
         if (fim.isBefore(inicio)) {
-            throw new RuntimeException("Regra de Negócio: A data de término não pode ser anterior ao início.");
+            throw new RegraNegocioException("Regra de Negócio: A data de término não pode ser anterior ao início.");
         }
         if (inscFim.isBefore(inscInicio)) {
-            throw new RuntimeException("Regra de Negócio: O fim das inscrições não pode ser anterior ao início.");
-        }
-    }
-
-    private void vincularCoordenador(Long projetoId, Long idCoordenadorManual) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-        if (auth == null || !auth.isAuthenticated() || auth.getName().equals("anonymousUser")) {
-            throw new RuntimeException("Acesso negado: É necessário estar logado para criar um projeto.");
-        }
-
-        Usuario logado = usuarioRepository.findByEmail(auth.getName())
-                .orElseThrow(() -> new RuntimeException("Usuário logado não encontrado no banco de dados."));
-
-        Long idFinalDoCoordenador = logado.getId();
-        Usuario coordenadorFinal = logado;
-
-        boolean isAdmin = auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-
-        if (idCoordenadorManual != null && isAdmin) {
-            idFinalDoCoordenador = idCoordenadorManual;
-            coordenadorFinal = usuarioRepository.findById(idCoordenadorManual)
-                    .orElseThrow(() -> new RuntimeException("Coordenador manual não encontrado."));
-        }
-
-        // Validação de Segurança: O coordenador de um projeto DEVE ser um SERVIDOR
-        if (!Usuario.Vinculo.SERVIDOR.equals(coordenadorFinal.getVinculo())) {
-            throw new RuntimeException("Regra de Negócio: Apenas usuários com vínculo SERVIDOR podem ser coordenadores de projetos.");
-        }
-
-        VinculoEquipe vinculo = new VinculoEquipe();
-        vinculo.setIdProjeto(projetoId);
-        vinculo.setIdUsuario(idFinalDoCoordenador);
-        vinculo.setPapel(VinculoEquipe.Papel.COORDENADOR);
-        vinculo.setAtivo(true);
-
-        vinculoRepository.save(vinculo);
-    }
-
-    private void validarPermissaoEdicao(Long projetoId) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-        if (auth == null || !auth.isAuthenticated() || auth.getName().equals("anonymousUser")) {
-            throw new RuntimeException("Acesso negado: É necessário estar logado para realizar esta ação.");
-        }
-
-        boolean isAdmin = auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-
-        if (isAdmin) {
-            return;
-        }
-
-        Usuario logado = usuarioRepository.findByEmail(auth.getName())
-                .orElseThrow(() -> new RuntimeException("Usuário logado não encontrado no banco de dados."));
-
-        VinculoEquipe vinculo = vinculoRepository.findByIdProjetoAndIdUsuario(projetoId, logado.getId())
-                .orElseThrow(
-                        () -> new RuntimeException("Acesso negado: Você não possui permissão sobre este projeto."));
-
-        if (!VinculoEquipe.Papel.COORDENADOR.equals(vinculo.getPapel())) {
-            throw new RuntimeException("Acesso negado: Apenas o COORDENADOR possui permissão para alterar o projeto.");
-        }
-
-        if (!Boolean.TRUE.equals(vinculo.getAtivo())) {
-            throw new RuntimeException("Acesso negado: Seu vínculo com este projeto está inativo.");
-        }
-    }
-
-    private void validarPermissaoCriacao() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-        if (auth == null || !auth.isAuthenticated() || auth.getName().equals("anonymousUser")) {
-            throw new RuntimeException("Acesso negado: É necessário estar logado para realizar esta ação.");
-        }
-
-        boolean isAdmin = auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-
-        if (isAdmin) {
-            return;
-        }
-
-        Usuario logado = usuarioRepository.findByEmail(auth.getName())
-                .orElseThrow(() -> new RuntimeException("Usuário logado não encontrado no banco de dados."));
-
-        if (logado.getVinculo() == null || !"SERVIDOR".equalsIgnoreCase(logado.getVinculo().toString())) {
-            throw new RuntimeException(
-                    "Acesso negado: Apenas Administradores ou Servidores possuem permissão para cadastrar projetos.");
-        }
-    }
-
-    private void validarPermissaoAdmin() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        boolean isAdmin = auth != null && auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-
-        if (!isAdmin) {
-            throw new RuntimeException("Acesso negado: Ação exclusiva para administradores.");
+            throw new RegraNegocioException("Regra de Negócio: O fim das inscrições não pode ser anterior ao início.");
         }
     }
 
     private void validarLinksObrigatorios(String linkEdital, String linkInscricao) {
         if ((linkEdital == null || linkEdital.isBlank()) && (linkInscricao == null || linkInscricao.isBlank())) {
-            throw new RuntimeException(
+            throw new RegraNegocioException(
                     "Regra de Negócio: Pelo menos um link (Edital ou Inscrição Externo) deve ser fornecido.");
         }
     }
@@ -325,11 +222,11 @@ public class ProjetoService {
             return;
 
         if (!base64.startsWith("data:image/")) {
-            throw new RuntimeException("Regra de Negócio: Formato de imagem inválido. Deve ser Base64 (data:image/...).");
+            throw new RegraNegocioException("Regra de Negócio: Formato de imagem inválido. Deve ser Base64 (data:image/...).");
         }
 
         if (base64.length() > 2800000) {
-            throw new RuntimeException("Regra de Negócio: O banner excede o tamanho máximo de 2MB.");
+            throw new RegraNegocioException("Regra de Negócio: O banner excede o tamanho máximo de 2MB.");
         }
     }
 
@@ -346,6 +243,79 @@ public class ProjetoService {
         projeto.setVagas(dto.getVagas());
         projeto.setModalidade(dto.getModalidade());
         projeto.setBanner(dto.getBanner());
+    }
+
+    private void vincularCoordenador(Long projetoId, Long idCoordenadorManual) {
+        Usuario logado = SecurityUtils.getLoggedUser(usuarioRepository);
+
+        Long idFinalDoCoordenador = logado.getId();
+        Usuario coordenadorFinal = logado;
+
+        boolean isAdmin = SecurityUtils.isAdmin();
+
+        if (idCoordenadorManual != null && isAdmin) {
+            idFinalDoCoordenador = idCoordenadorManual;
+            coordenadorFinal = usuarioRepository.findById(idCoordenadorManual)
+                    .orElseThrow(() -> new RecursoNaoEncontradoException("Coordenador manual não encontrado."));
+        }
+
+        // Validação de Segurança: O coordenador de um projeto DEVE ser um SERVIDOR
+        if (!Usuario.Vinculo.SERVIDOR.equals(coordenadorFinal.getVinculo())) {
+            throw new RegraNegocioException("Regra de Negócio: Apenas usuários com vínculo SERVIDOR podem ser coordenadores de projetos.");
+        }
+
+        VinculoEquipe vinculo = new VinculoEquipe();
+        vinculo.setIdProjeto(projetoId);
+        vinculo.setIdUsuario(idFinalDoCoordenador);
+        vinculo.setPapel(VinculoEquipe.Papel.COORDENADOR);
+        vinculo.setAtivo(true);
+
+        vinculoRepository.save(vinculo);
+    }
+
+    private void validarPermissaoEdicao(Long projetoId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated() || auth.getName().equals("anonymousUser")) {
+            throw new RecursoNaoEncontradoException("Acesso negado: É necessário estar logado para realizar esta ação.");
+        }
+
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (isAdmin) {
+            return;
+        }
+
+        Usuario logado = usuarioRepository.findByEmail(auth.getName())
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário logado não encontrado no banco de dados."));
+
+        VinculoEquipe vinculo = vinculoRepository.findByIdProjetoAndIdUsuario(projetoId, logado.getId())
+                .orElseThrow(
+                        () -> new RecursoNaoEncontradoException("Acesso negado: Você não possui permissão sobre este projeto."));
+
+        if (!VinculoEquipe.Papel.COORDENADOR.equals(vinculo.getPapel())) {
+            throw new RecursoNaoEncontradoException("Acesso negado: Apenas o COORDENADOR possui permissão para alterar o projeto.");
+        }
+
+        if (!Boolean.TRUE.equals(vinculo.getAtivo())) {
+            throw new RecursoNaoEncontradoException("Acesso negado: Seu vínculo com este projeto está inativo.");
+        }
+    }
+
+    private void validarPermissaoCriacao() {
+        Usuario logado = SecurityUtils.getLoggedUser(usuarioRepository);
+
+        if (!SecurityUtils.isAdmin()) {
+            if (logado.getVinculo() == null || !"SERVIDOR".equalsIgnoreCase(logado.getVinculo().toString())) {
+                throw new RegraNegocioException(
+                        "Acesso negado: Apenas Administradores ou Servidores possuem permissão para cadastrar projetos.");
+            }
+        }
+    }
+
+    private void validarPermissaoAdmin() {
+        SecurityUtils.validarPermissaoAdmin();
     }
 
     public ProjetoResponseDTO toResponseDTO(Projeto projeto) {

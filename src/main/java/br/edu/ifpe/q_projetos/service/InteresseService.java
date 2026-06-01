@@ -2,8 +2,11 @@ package br.edu.ifpe.q_projetos.service;
 
 import br.edu.ifpe.q_projetos.dto.InteresseDTO;
 import br.edu.ifpe.q_projetos.dto.InteresseResponseDTO;
+import br.edu.ifpe.q_projetos.exception.RegraNegocioException;
+import br.edu.ifpe.q_projetos.exception.RecursoNaoEncontradoException;
 import br.edu.ifpe.q_projetos.model.*;
 import br.edu.ifpe.q_projetos.repository.*;
+import br.edu.ifpe.q_projetos.security.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -32,13 +35,13 @@ public class InteresseService {
     public InteresseResponseDTO salvar(InteresseDTO dto) {
         // RN02: Unicidade de interesse
         if (repository.existsByEmailAndProjetoId(dto.getEmail(), dto.getIdProjeto())) {
-            throw new RuntimeException("Regra de Negócio: Você já manifestou interesse neste projeto.");
+            throw new RegraNegocioException("Regra de Negócio: Você já manifestou interesse neste projeto.");
         }
 
         validarLgpd(dto.getAceitouLgpd());
 
         Projeto projeto = projetoRepository.findById(dto.getIdProjeto())
-                .orElseThrow(() -> new RuntimeException("Projeto não encontrado."));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Projeto não encontrado."));
 
         Interesse interesse = new Interesse();
         interesse.setProjeto(projeto);
@@ -52,7 +55,7 @@ public class InteresseService {
     }
 
     public List<InteresseResponseDTO> listarTodos() {
-        validarPermissaoAdmin();
+        SecurityUtils.validarPermissaoAdmin();
         return repository.findAll().stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
@@ -67,7 +70,7 @@ public class InteresseService {
 
     public InteresseResponseDTO buscarPorId(Long id) {
         Interesse interesse = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Interesse não encontrado."));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Interesse não encontrado."));
         validarPermissaoAcessoProjeto(interesse.getProjeto().getId());
         return toResponseDTO(interesse);
     }
@@ -75,47 +78,30 @@ public class InteresseService {
     @Transactional
     public void deletar(Long id) {
         Interesse interesse = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Interesse não encontrado."));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Interesse não encontrado."));
         validarPermissaoAcessoProjeto(interesse.getProjeto().getId());
         repository.delete(interesse);
     }
 
     private void validarLgpd(Boolean aceitou) {
         if (aceitou == null || !aceitou) {
-            throw new RuntimeException("Regra de Negócio: É obrigatório aceitar os termos da LGPD.");
-        }
-    }
-
-    private void validarPermissaoAdmin() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        boolean isAdmin = auth != null && auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-        if (!isAdmin) {
-            throw new RuntimeException("Acesso negado: Ação exclusiva para administradores.");
+            throw new RegraNegocioException("Regra de Negócio: É obrigatório aceitar os termos da LGPD.");
         }
     }
 
     private void validarPermissaoAcessoProjeto(Long projetoId) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || auth.getName().equals("anonymousUser")) {
-            throw new RuntimeException("Acesso negado: Usuário não autenticado.");
-        }
-
-        boolean isAdmin = auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-        if (isAdmin)
+        if (SecurityUtils.isAdmin())
             return;
 
-        Usuario logado = usuarioRepository.findByEmail(auth.getName())
-                .orElseThrow(() -> new RuntimeException("Usuário logado não encontrado."));
+        Usuario logado = SecurityUtils.getLoggedUser(usuarioRepository);
 
         // RN05: Restrição de Coordenação Isolada
         VinculoEquipe vinculo = vinculoRepository.findByIdProjetoAndIdUsuario(projetoId, logado.getId())
-                .orElseThrow(() -> new RuntimeException("Acesso negado: Você não possui vínculo com este projeto."));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Acesso negado: Você não possui vínculo com este projeto."));
 
         if (!VinculoEquipe.Papel.COORDENADOR.equals(vinculo.getPapel()) &&
                 !VinculoEquipe.Papel.COLABORADOR.equals(vinculo.getPapel())) {
-            throw new RuntimeException("Acesso negado: Apenas coordenadores ou colaboradores podem visualizar leads.");
+            throw new RecursoNaoEncontradoException("Acesso negado: Apenas coordenadores ou colaboradores podem visualizar leads.");
         }
     }
 

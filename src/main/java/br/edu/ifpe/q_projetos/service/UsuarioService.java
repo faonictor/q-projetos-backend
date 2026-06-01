@@ -4,8 +4,11 @@ import br.edu.ifpe.q_projetos.dto.UsuarioCreateDTO;
 import br.edu.ifpe.q_projetos.dto.UsuarioPerfilUpdateDTO;
 import br.edu.ifpe.q_projetos.dto.UsuarioResponseDTO;
 import br.edu.ifpe.q_projetos.dto.UsuarioUpdateDTO;
+import br.edu.ifpe.q_projetos.exception.RegraNegocioException;
+import br.edu.ifpe.q_projetos.exception.RecursoNaoEncontradoException;
 import br.edu.ifpe.q_projetos.model.Usuario;
 import br.edu.ifpe.q_projetos.repository.UsuarioRepository;
+import br.edu.ifpe.q_projetos.security.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -26,12 +29,12 @@ public class UsuarioService {
 
     public UsuarioResponseDTO cadastrarUsuario(UsuarioCreateDTO dto) {
         if (repository.existsByEmail(dto.getEmail())) {
-            throw new RuntimeException("Regra de Negócio: Este e-mail já está cadastrado no sistema.");
+            throw new RegraNegocioException("Regra de Negócio: Este e-mail já está cadastrado no sistema.");
         }
 
         // Validação de Role vs Vínculo
         if (Usuario.Role.ROLE_COORD.equals(dto.getRole()) && !Usuario.Vinculo.SERVIDOR.equals(dto.getVinculo())) {
-            throw new RuntimeException("Regra de Negócio: Apenas usuários com vínculo SERVIDOR podem ser Coordenadores.");
+            throw new RegraNegocioException("Regra de Negócio: Apenas usuários com vínculo SERVIDOR podem ser Coordenadores.");
         }
 
         Usuario usuario = new Usuario();
@@ -41,7 +44,7 @@ public class UsuarioService {
         usuario.setVinculo(dto.getVinculo());
 
         if (dto.getSenha() == null || dto.getSenha().isBlank()) {
-            throw new RuntimeException("Regra de Negócio: A senha é obrigatória.");
+            throw new RegraNegocioException("Regra de Negócio: A senha é obrigatória.");
         }
 
         usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
@@ -49,7 +52,7 @@ public class UsuarioService {
     }
 
     public List<UsuarioResponseDTO> listarTodos() {
-        validarPermissaoAdmin();
+        SecurityUtils.validarPermissaoAdmin();
         return repository.findAll()
                 .stream()
                 .map(this::toResponseDTO)
@@ -58,17 +61,17 @@ public class UsuarioService {
 
     public UsuarioResponseDTO buscarPorId(Long id) {
         Usuario usuario = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com o ID: " + id));
-        
-        validarPermissaoDonoOuAdmin(usuario.getEmail());
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado com o ID: " + id));
+
+        SecurityUtils.validarPermissaoDonoOuAdmin(usuario.getEmail());
         return toResponseDTO(usuario);
     }
 
     public UsuarioResponseDTO atualizarUsuario(Long id, UsuarioUpdateDTO dto) {
         Usuario usuario = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado para atualização."));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado para atualização."));
 
-        validarPermissaoDonoOuAdmin(usuario.getEmail());
+        SecurityUtils.validarPermissaoDonoOuAdmin(usuario.getEmail());
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean isAdmin = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
@@ -78,7 +81,7 @@ public class UsuarioService {
 
         if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
             if (!dto.getEmail().equals(usuario.getEmail()) && repository.existsByEmail(dto.getEmail())) {
-                throw new RuntimeException("Regra de Negócio: Este e-mail já está em uso por outro usuário.");
+                throw new RegraNegocioException("Regra de Negócio: Este e-mail já está em uso por outro usuário.");
             }
             usuario.setEmail(dto.getEmail());
         }
@@ -89,7 +92,7 @@ public class UsuarioService {
             Usuario.Vinculo novoVinculo = dto.getVinculo() != null ? dto.getVinculo() : usuario.getVinculo();
 
             if (Usuario.Role.ROLE_COORD.equals(novaRole) && !Usuario.Vinculo.SERVIDOR.equals(novoVinculo)) {
-                throw new RuntimeException("Regra de Negócio: Apenas usuários com vínculo SERVIDOR podem ser Coordenadores.");
+                throw new RegraNegocioException("Regra de Negócio: Apenas usuários com vínculo SERVIDOR podem ser Coordenadores.");
             }
 
             if (dto.getRole() != null) usuario.setRole(dto.getRole());
@@ -104,13 +107,7 @@ public class UsuarioService {
     }
 
     public UsuarioResponseDTO atualizarPerfil(UsuarioPerfilUpdateDTO dto) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || auth.getName().equals("anonymousUser")) {
-            throw new RuntimeException("Acesso negado: Usuário não autenticado.");
-        }
-
-        Usuario usuario = repository.findByEmail(auth.getName())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado."));
+        Usuario usuario = SecurityUtils.getLoggedUser(repository);
 
         if (dto.getNome() != null && !dto.getNome().isBlank()) {
             usuario.setNome(dto.getNome());
@@ -119,7 +116,7 @@ public class UsuarioService {
         if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
             // Se o e-mail mudou, verifica se já existe
             if (!dto.getEmail().equals(usuario.getEmail()) && repository.existsByEmail(dto.getEmail())) {
-                throw new RuntimeException("Regra de Negócio: Este e-mail já está em uso por outro usuário.");
+                throw new RegraNegocioException("Regra de Negócio: Este e-mail já está em uso por outro usuário.");
             }
             usuario.setEmail(dto.getEmail());
         }
@@ -133,43 +130,19 @@ public class UsuarioService {
 
     public void deletarUsuario(Long id) {
         Usuario usuario = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado."));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado."));
 
-        validarPermissaoDonoOuAdmin(usuario.getEmail());
+        SecurityUtils.validarPermissaoDonoOuAdmin(usuario.getEmail());
         repository.deleteById(id);
     }
 
-    private void validarPermissaoAdmin() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        boolean isAdmin = auth != null && auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-        if (!isAdmin) {
-            throw new RuntimeException("Acesso negado: Ação exclusiva para administradores.");
-        }
-    }
-
-    private void validarPermissaoDonoOuAdmin(String emailDono) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || auth.getName().equals("anonymousUser")) {
-            throw new RuntimeException("Acesso negado: Usuário não autenticado.");
-        }
-
-        boolean isAdmin = auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-        boolean isDono = auth.getName().equals(emailDono);
-
-        if (!isAdmin && !isDono) {
-            throw new RuntimeException("Acesso negado: Você não possui permissão para acessar estes dados.");
-        }
-    }
-
     private UsuarioResponseDTO toResponseDTO(Usuario usuario) {
-        UsuarioResponseDTO response = new UsuarioResponseDTO();
-        response.setId(usuario.getId());
-        response.setNome(usuario.getNome());
-        response.setEmail(usuario.getEmail());
-        response.setRole(usuario.getRole());
-        response.setVinculo(usuario.getVinculo());
-        return response;
+        return UsuarioResponseDTO.builder()
+                .id(usuario.getId())
+                .nome(usuario.getNome())
+                .email(usuario.getEmail())
+                .role(usuario.getRole())
+                .vinculo(usuario.getVinculo())
+                .build();
     }
 }

@@ -28,7 +28,6 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/projetos")
-@CrossOrigin(origins = "*")
 public class ProjetoController {
 
     @Autowired
@@ -40,7 +39,7 @@ public class ProjetoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProjetoResponseDTO> buscarPorId(@PathVariable("id") Long id) {
+    public ResponseEntity<ProjetoResponseDTO> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(service.buscarPorId(id));
     }
 
