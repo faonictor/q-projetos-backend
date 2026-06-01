@@ -1,20 +1,25 @@
 package br.edu.ifpe.q_projetos.service;
 
-import br.edu.ifpe.q_projetos.dto.InteresseDTO;
-import br.edu.ifpe.q_projetos.dto.InteresseResponseDTO;
-import br.edu.ifpe.q_projetos.exception.RegraNegocioException;
-import br.edu.ifpe.q_projetos.exception.RecursoNaoEncontradoException;
-import br.edu.ifpe.q_projetos.model.*;
-import br.edu.ifpe.q_projetos.repository.*;
-import br.edu.ifpe.q_projetos.security.SecurityUtils;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import br.edu.ifpe.q_projetos.dto.InteresseDTO;
+import br.edu.ifpe.q_projetos.dto.InteresseResponseDTO;
+import br.edu.ifpe.q_projetos.exception.RecursoNaoEncontradoException;
+import br.edu.ifpe.q_projetos.exception.RegraNegocioException;
+import br.edu.ifpe.q_projetos.model.Interesse;
+import br.edu.ifpe.q_projetos.model.Projeto;
+import br.edu.ifpe.q_projetos.model.Usuario;
+import br.edu.ifpe.q_projetos.model.VinculoEquipe;
+import br.edu.ifpe.q_projetos.repository.InteresseRepository;
+import br.edu.ifpe.q_projetos.repository.ProjetoRepository;
+import br.edu.ifpe.q_projetos.repository.UsuarioRepository;
+import br.edu.ifpe.q_projetos.repository.VinculoEquipeRepository;
+import br.edu.ifpe.q_projetos.security.SecurityUtils;
 
 @Service
 public class InteresseService {

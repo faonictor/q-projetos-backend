@@ -1,24 +1,21 @@
 package br.edu.ifpe.q_projetos.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import br.edu.ifpe.q_projetos.dto.FavoritoDTO;
 import br.edu.ifpe.q_projetos.dto.FavoritoResponseDTO;
-import br.edu.ifpe.q_projetos.exception.RegraNegocioException;
 import br.edu.ifpe.q_projetos.exception.RecursoNaoEncontradoException;
 import br.edu.ifpe.q_projetos.model.Favorito;
 import br.edu.ifpe.q_projetos.model.Projeto;
-import br.edu.ifpe.q_projetos.model.Usuario;
 import br.edu.ifpe.q_projetos.repository.FavoritoRepository;
 import br.edu.ifpe.q_projetos.repository.ProjetoRepository;
 import br.edu.ifpe.q_projetos.repository.UsuarioRepository;
 import br.edu.ifpe.q_projetos.security.SecurityUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class FavoritoService {
@@ -77,10 +74,6 @@ public class FavoritoService {
 
     private Long getLoggedUserId() {
         return SecurityUtils.getLoggedUserId(usuarioRepository);
-    }
-
-    private void validarPermissaoAdmin() {
-        SecurityUtils.validarPermissaoAdmin();
     }
 
     private FavoritoResponseDTO toResponseDTO(Favorito favorito) {
