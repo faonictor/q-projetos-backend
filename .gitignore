@@ -60,3 +60,7 @@ application-dev.yml
 hs_err_pid*
 replay_pid*
 
+# Testes de CORS locais
+cors-test.html
+cors-test-prod.html
+
