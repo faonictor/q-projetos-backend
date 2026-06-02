@@ -1,21 +1,21 @@
 package br.edu.ifpe.q_projetos.service;
 
-import br.edu.ifpe.q_projetos.dto.FavoritoDTO;
-import br.edu.ifpe.q_projetos.dto.FavoritoResponseDTO;
-import br.edu.ifpe.q_projetos.model.Favorito;
-import br.edu.ifpe.q_projetos.model.Projeto;
-import br.edu.ifpe.q_projetos.model.Usuario;
-import br.edu.ifpe.q_projetos.repository.FavoritoRepository;
-import br.edu.ifpe.q_projetos.repository.ProjetoRepository;
-import br.edu.ifpe.q_projetos.repository.UsuarioRepository;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import br.edu.ifpe.q_projetos.dto.FavoritoDTO;
+import br.edu.ifpe.q_projetos.dto.FavoritoResponseDTO;
+import br.edu.ifpe.q_projetos.exception.RecursoNaoEncontradoException;
+import br.edu.ifpe.q_projetos.model.Favorito;
+import br.edu.ifpe.q_projetos.model.Projeto;
+import br.edu.ifpe.q_projetos.repository.FavoritoRepository;
+import br.edu.ifpe.q_projetos.repository.ProjetoRepository;
+import br.edu.ifpe.q_projetos.repository.UsuarioRepository;
+import br.edu.ifpe.q_projetos.security.SecurityUtils;
 
 @Service
 public class FavoritoService {
@@ -54,7 +54,7 @@ public class FavoritoService {
     }
 
     public List<FavoritoResponseDTO> listarTodos() {
-        validarPermissaoAdmin();
+        SecurityUtils.validarPermissaoAdmin();
         return repository.findAll().stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
@@ -62,33 +62,18 @@ public class FavoritoService {
 
     public FavoritoResponseDTO buscarPorId(Long id) {
         Favorito favorito = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Favorito não encontrado"));
-        
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Favorito não encontrado"));
+
         Long logadoId = getLoggedUserId();
         if (!favorito.getIdUsuario().equals(logadoId)) {
-            validarPermissaoAdmin();
+            SecurityUtils.validarPermissaoAdmin();
         }
-        
+
         return toResponseDTO(favorito);
     }
 
     private Long getLoggedUserId() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || auth.getName().equals("anonymousUser")) {
-            throw new RuntimeException("Acesso negado: Usuário não autenticado.");
-        }
-        Usuario user = usuarioRepository.findByEmail(auth.getName())
-                .orElseThrow(() -> new RuntimeException("Usuário logado não encontrado."));
-        return user.getId();
-    }
-
-    private void validarPermissaoAdmin() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        boolean isAdmin = auth != null && auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-        if (!isAdmin) {
-            throw new RuntimeException("Acesso negado: Ação exclusiva para administradores.");
-        }
+        return SecurityUtils.getLoggedUserId(usuarioRepository);
     }
 
     private FavoritoResponseDTO toResponseDTO(Favorito favorito) {

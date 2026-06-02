@@ -27,7 +27,7 @@ public class InteresseController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'COORD')")
-    public ResponseEntity<InteresseResponseDTO> buscarPorId(@PathVariable("id") Long id) {
+    public ResponseEntity<InteresseResponseDTO> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(service.buscarPorId(id));
     }
 
@@ -40,10 +40,10 @@ public class InteresseController {
     @GetMapping("/projeto/{projetoId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'COORD')")
     public ResponseEntity<List<InteresseResponseDTO>> listarLeadsPorProjeto(
-            @PathVariable("projetoId") Long projetoId) {
+            @PathVariable Long projetoId) {
         return ResponseEntity.ok(service.listarLeadsPorProjeto(projetoId));
     }
-    
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAnyRole('ADMIN', 'COORD')")

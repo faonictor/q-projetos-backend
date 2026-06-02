@@ -2,10 +2,11 @@ package br.edu.ifpe.q_projetos.service;
 
 import br.edu.ifpe.q_projetos.dto.VinculoEquipeDTO;
 import br.edu.ifpe.q_projetos.dto.VinculoEquipeResponseDTO;
-import br.edu.ifpe.q_projetos.model.*;
-import br.edu.ifpe.q_projetos.repository.*;
 import br.edu.ifpe.q_projetos.exception.RecursoNaoEncontradoException;
 import br.edu.ifpe.q_projetos.exception.RegraNegocioException;
+import br.edu.ifpe.q_projetos.model.*;
+import br.edu.ifpe.q_projetos.repository.*;
+import br.edu.ifpe.q_projetos.security.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -46,7 +47,7 @@ public class VinculoEquipeService {
     }
 
     public List<VinculoEquipeResponseDTO> listar() {
-        validarPermissaoAdmin();
+        SecurityUtils.validarPermissaoAdmin();
         return repository.findAll().stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
@@ -111,15 +112,6 @@ public class VinculoEquipeService {
 
         if (!Boolean.TRUE.equals(vinculo.getAtivo())) {
             throw new RegraNegocioException("Acesso negado: Seu vínculo de coordenação está inativo");
-        }
-    }
-
-    private void validarPermissaoAdmin() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        boolean isAdmin = auth != null && auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-        if (!isAdmin) {
-            throw new RegraNegocioException("Acesso negado: Ação exclusiva para administradores.");
         }
     }
 
