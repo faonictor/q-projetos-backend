@@ -53,7 +53,7 @@ public class SecurityConfig {
 
                 // 4. Regras de Autorização de Rotas
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/", "/index.html", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/auth/**", "/oauth2/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/projetos/**").permitAll()
                         .requestMatchers("/api/usuarios/**").authenticated()
