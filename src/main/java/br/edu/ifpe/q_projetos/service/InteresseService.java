@@ -1,9 +1,12 @@
 package br.edu.ifpe.q_projetos.service;
 
+import br.edu.ifpe.q_projetos.dto.InteresseDTO;
+import br.edu.ifpe.q_projetos.dto.InteresseResponseDTO;
 import br.edu.ifpe.q_projetos.model.Interesse;
+import br.edu.ifpe.q_projetos.model.Projeto;
 import br.edu.ifpe.q_projetos.repository.InteresseRepository;
+import br.edu.ifpe.q_projetos.repository.ProjetoRepository;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,69 +14,150 @@ import java.util.List;
 @Service
 public class InteresseService {
 
-    @Autowired
-    private InteresseRepository repository;
+    private final InteresseRepository repository;
+    private final ProjetoRepository projetoRepository;
 
-    public Interesse salvar(Interesse interesse) {
+    public InteresseService(
+            InteresseRepository repository,
+            ProjetoRepository projetoRepository) {
 
-        validarLgpd(interesse);
-
-        return repository.save(interesse);
+        this.repository = repository;
+        this.projetoRepository = projetoRepository;
     }
 
-    public List<Interesse> listarTodos() {
-        return repository.findAll();
-    }
+    public InteresseResponseDTO salvar(
+            InteresseDTO dto) {
 
-    public List<Interesse> listarLeadsPorProjeto(Long projetoId) {
-        return repository.findByProjetoId(projetoId);
-    }
-
-    public Interesse buscarPorId(Long id) {
-
-        return repository.findById(id)
+        Projeto projeto = projetoRepository
+                .findById(dto.getProjetoId())
                 .orElseThrow(() ->
                         new RuntimeException(
-                                "Interesse não encontrado."
-                        ));
-    }
+                                "Projeto não encontrado"));
 
-    public Interesse atualizar(Long id, Interesse interesseAtualizado) {
+        Interesse interesse = new Interesse();
 
-        Interesse interesse = buscarPorId(id);
-
-        interesse.setProjeto(interesseAtualizado.getProjeto());
-        interesse.setNome(interesseAtualizado.getNome());
-        interesse.setEmail(interesseAtualizado.getEmail());
-        interesse.setSeriePeriodo(
-                interesseAtualizado.getSeriePeriodo());
-
+        interesse.setProjeto(projeto);
+        interesse.setNome(dto.getNome());
+        interesse.setEmail(dto.getEmail());
+        interesse.setSeriePeriodo(dto.getSeriePeriodo());
         interesse.setModalidadePretendida(
-                interesseAtualizado.getModalidadePretendida());
-
+                dto.getModalidadePretendida());
         interesse.setAceitouLgpd(
-                interesseAtualizado.getAceitouLgpd());
+                dto.getAceitouLgpd());
 
         validarLgpd(interesse);
 
-        return repository.save(interesse);
+        return converterParaDTO(
+                repository.save(interesse));
+    }
+
+    public List<InteresseResponseDTO> listarTodos() {
+
+        return repository.findAll()
+                .stream()
+                .map(this::converterParaDTO)
+                .toList();
+    }
+
+    public InteresseResponseDTO buscarPorId(Long id) {
+
+        return converterParaDTO(
+                repository.findById(id)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Interesse não encontrado")));
+    }
+
+    public InteresseResponseDTO atualizar(
+            Long id,
+            InteresseDTO dto) {
+
+        Interesse interesse = repository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Interesse não encontrado"));
+
+        Projeto projeto = projetoRepository
+                .findById(dto.getProjetoId())
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Projeto não encontrado"));
+
+        interesse.setProjeto(projeto);
+        interesse.setNome(dto.getNome());
+        interesse.setEmail(dto.getEmail());
+        interesse.setSeriePeriodo(dto.getSeriePeriodo());
+        interesse.setModalidadePretendida(
+                dto.getModalidadePretendida());
+        interesse.setAceitouLgpd(
+                dto.getAceitouLgpd());
+
+        validarLgpd(interesse);
+
+        return converterParaDTO(
+                repository.save(interesse));
+    }
+
+    public List<InteresseResponseDTO>
+            listarLeadsPorProjeto(Long projetoId) {
+
+        return repository.findByProjetoId(projetoId)
+                .stream()
+                .map(this::converterParaDTO)
+                .toList();
     }
 
     public void deletar(Long id) {
 
-        Interesse interesse = buscarPorId(id);
+        Interesse interesse = repository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Interesse não encontrado"));
 
         repository.delete(interesse);
     }
 
-    private void validarLgpd(Interesse interesse) {
+    private void validarLgpd(
+            Interesse interesse) {
 
         if (interesse.getAceitouLgpd() == null
                 || !interesse.getAceitouLgpd()) {
 
             throw new RuntimeException(
-                    "É obrigatório aceitar os termos da LGPD."
-            );
+                    "É obrigatório aceitar os termos da LGPD.");
         }
+    }
+
+    private InteresseResponseDTO converterParaDTO(
+            Interesse interesse) {
+
+        InteresseResponseDTO dto =
+                new InteresseResponseDTO();
+
+        dto.setId(interesse.getId());
+
+        dto.setProjetoId(
+                interesse.getProjeto().getId());
+
+        dto.setTituloProjeto(
+                interesse.getProjeto().getTitulo());
+
+        dto.setNome(interesse.getNome());
+
+        dto.setEmail(interesse.getEmail());
+
+        dto.setSeriePeriodo(
+                interesse.getSeriePeriodo());
+
+        dto.setModalidadePretendida(
+                interesse.getModalidadePretendida());
+
+        dto.setAceitouLgpd(
+                interesse.getAceitouLgpd());
+
+        dto.setDataRegistro(
+                interesse.getDataRegistro());
+
+        return dto;
     }
 }
