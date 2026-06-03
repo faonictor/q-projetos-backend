@@ -1,0 +1,425 @@
+### Q-Projetos API - Arquivo de Testes
+### Este arquivo contém todos os endpoints disponíveis para testes
+
+@host = http://localhost:8080/api
+@token =
+
+###########################################################################
+### AUTENTICAÇÃO (AUTH)
+###########################################################################
+
+### 1. POST /api/auth/register
+### Registrar novo usuário na plataforma (Cadastro)
+POST {{host}}/auth/register
+Content-Type: application/json
+
+{
+  "nome": "Novo Usuário",
+  "email": "novo@ifpe.edu.br",
+  "senha": "senha123",
+  "role": "ROLE_USER",
+  "vinculo": "ESTUDANTE"
+}
+
+###
+
+### 2. POST /api/auth/login
+### Fazer login e obter token JWT para autenticação
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@ifpe.edu.br",
+  "senha": "admin123"
+}
+
+###########################################################################
+### PROJETOS
+###########################################################################
+
+### 3. GET /api/projetos
+### Listar todos os projetos disponíveis na plataforma (públicamente acessível)
+GET {{host}}/projetos
+Authorization: Bearer {{token}}
+
+###
+
+### 4. GET /api/projetos/{id}
+### Buscar projeto específico por ID (público - qualquer usuário pode visualizar)
+GET {{host}}/projetos/1
+Authorization: Bearer {{token}}
+
+###
+
+### 5. POST /api/projetos
+### Criar novo projeto (apenas ADMIN ou COORDENADOR)
+### Cria um novo projeto com status PENDENTE aguardando aprovação
+POST {{host}}/projetos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "titulo": "Projeto de Automação Industrial",
+  "tipo": "PESQUISA",
+  "descricao": "Estudo de processos de automação em indústrias da região",
+  "dataInicio": "2026-08-01",
+  "dataTermino": "2027-07-31",
+  "dataInicioInscricao": "2026-06-01",
+  "dataFimInscricao": "2026-06-30",
+  "linkEdital": "https://ifpe.edu.br/edital123",
+  "linkInscricaoExterno": "https://forms.gle/exemplo",
+  "vagas": 5,
+  "modalidade": "BOLSISTA",
+  "banner": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==",
+  "idCoordenadorManual": 2
+}
+
+###
+
+### 6. PUT /api/projetos/{id}
+### Atualizar informações de um projeto existente (ADMIN ou COORDENADOR do projeto)
+PUT {{host}}/projetos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "titulo": "Projeto de Automação Industrial - Atualizado",
+  "descricao": "Descrição atualizada do projeto",
+  "vagas": 3
+}
+
+###
+
+### 7. POST /api/projetos/{id}/aprovar
+### Aprovar um projeto (apenas ADMIN)
+### Muda o status do projeto para ATIVO permitindo inscrições
+POST {{host}}/projetos/1/aprovar
+Authorization: Bearer {{token}}
+
+###
+
+### 8. POST /api/projetos/{id}/reprovar
+### Reprovar um projeto (apenas ADMIN)
+### Muda o status do projeto para REPROVADO
+POST {{host}}/projetos/1/reprovar
+Authorization: Bearer {{token}}
+
+###
+
+### 9. DELETE /api/projetos/{id}
+### Deletar um projeto do sistema (apenas ADMIN)
+### Remove permanentemente o projeto e todos os seus dados relacionados
+DELETE {{host}}/projetos/1
+Authorization: Bearer {{token}}
+
+###
+
+### 10. GET /api/projetos/buscar?texto={texto}
+### Buscar projetos por texto (título e descrição)
+### Busca em tempo real por qualquer palavra-chave nos projetos
+GET {{host}}/projetos/buscar?texto=automação
+Authorization: Bearer {{token}}
+
+###
+
+### 11. GET /api/projetos/meus-projetos
+### Listar todos os projetos do usuário logado (ADMIN ou COORDENADOR)
+### Retorna apenas os projetos que o usuário coordena
+GET {{host}}/projetos/meus-projetos
+Authorization: Bearer {{token}}
+
+###
+
+### 12. GET /api/projetos/tipo?tipo={tipo}
+### Buscar projetos por tipo (ENSINO, PESQUISA, EXTENSAO)
+### Filtra projetos pela categoria/tipo especificado
+GET {{host}}/projetos/tipo?tipo=PESQUISA
+Authorization: Bearer {{token}}
+
+###
+
+### 13. GET /api/projetos/status?status={status}
+### Buscar projetos por status de inscrição
+### Retorna projetos com status específico (PENDENTE, ATIVO, ENCERRADO, REPROVADO)
+GET {{host}}/projetos/status?status=ATIVO
+Authorization: Bearer {{token}}
+
+###########################################################################
+### USUÁRIOS
+###########################################################################
+
+### 14. POST /api/usuarios
+### Cadastrar novo usuário (apenas ADMIN)
+### Cria novo usuário no sistema com role e vínculo específicos
+POST {{host}}/usuarios
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nome": "Professor Coordenador",
+  "email": "professor@ifpe.edu.br",
+  "senha": "senha123",
+  "role": "ROLE_COORD",
+  "vinculo": "SERVIDOR"
+}
+
+###
+
+### 15. GET /api/usuarios
+### Listar todos os usuários do sistema (apenas ADMIN)
+### Retorna lista completa de usuários cadastrados
+GET {{host}}/usuarios
+Authorization: Bearer {{token}}
+
+###
+
+### 16. GET /api/usuarios/{id}
+### Buscar usuário específico por ID (usuário autenticado)
+### Retorna dados completos do usuário
+GET {{host}}/usuarios/1
+Authorization: Bearer {{token}}
+
+###
+
+### 17. PUT /api/usuarios/{id}
+### Atualizar dados de um usuário (apenas ADMIN)
+### Permite alterar nome, email, senha, role e vínculo do usuário
+PUT {{host}}/usuarios/2
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nome": "Nome Atualizado",
+  "email": "email_novo@ifpe.edu.br",
+  "role": "ROLE_COORD",
+  "vinculo": "SERVIDOR"
+}
+
+###
+
+### 18. PUT /api/usuarios/perfil
+### Atualizar meu perfil (usuário autenticado)
+### Permite que o próprio usuário altere seu nome, email e senha
+PUT {{host}}/usuarios/perfil
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nome": "Meu Novo Nome",
+  "email": "meu_email_novo@ifpe.edu.br",
+  "senha": "novaSenha123"
+}
+
+###
+
+### 19. DELETE /api/usuarios/{id}
+### Deletar usuário do sistema (usuário autenticado)
+### Remove permanentemente a conta do usuário
+DELETE {{host}}/usuarios/5
+Authorization: Bearer {{token}}
+
+###########################################################################
+### FAVORITOS
+###########################################################################
+
+### 20. GET /api/favoritos
+### Listar todos os favoritos (apenas ADMIN)
+### Retorna lista de todos os projetos marcados como favorito por qualquer usuário
+GET {{host}}/favoritos
+Authorization: Bearer {{token}}
+
+###
+
+### 21. GET /api/favoritos/meu-historico
+### Ver meu histórico de projetos favoritados (usuário autenticado)
+### Retorna todos os projetos que o usuário logado marcou como favorito
+GET {{host}}/favoritos/meu-historico
+Authorization: Bearer {{token}}
+
+###
+
+### 22. GET /api/favoritos/{id}
+### Buscar favorito específico por ID (usuário autenticado)
+### Retorna os dados de um relacionamento favorito específico
+GET {{host}}/favoritos/1
+Authorization: Bearer {{token}}
+
+###
+
+### 23. POST /api/favoritos
+### Adicionar projeto aos favoritos (usuário autenticado)
+### Marca um projeto como favorito para fácil acesso posterior
+POST {{host}}/favoritos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "idProjeto": 1
+}
+
+###
+
+### 24. DELETE /api/favoritos/projeto/{idProjeto}
+### Remover projeto dos favoritos (usuário autenticado)
+### Desmarcar um projeto que estava nos favoritos
+DELETE {{host}}/favoritos/projeto/1
+Authorization: Bearer {{token}}
+
+###########################################################################
+### INTERESSES (LEADS)
+###########################################################################
+
+### 25. GET /api/interesses
+### Listar todos os interesses registrados (apenas ADMIN)
+### Retorna lista de todos os leads/interesses de qualquer projeto
+GET {{host}}/interesses
+Authorization: Bearer {{token}}
+
+###
+
+### 26. GET /api/interesses/{id}
+### Buscar interesse específico por ID (ADMIN ou COORDENADOR)
+### Retorna dados de um lead específico
+GET {{host}}/interesses/1
+Authorization: Bearer {{token}}
+
+###
+
+### 27. POST /api/interesses
+### Registrar interesse em um projeto (usuário autenticado)
+### Cria um lead/interesse do estudante em participar do projeto
+### Regrinha de negócio: Não permite duplicata (mesmo usuário + projeto)
+POST {{host}}/interesses
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "idProjeto": 1,
+  "nome": "João Silva",
+  "email": "joao@discente.ifpe.edu.br",
+  "seriePeriodo": "6º Período - Análise e Desenvolvimento de Sistemas",
+  "modalidadePretendida": "BOLSISTA",
+  "aceitouLgpd": true
+}
+
+###
+
+### 28. GET /api/interesses/projeto/{projetoId}
+### Listar todos os leads/interesses de um projeto (ADMIN ou COORDENADOR)
+### Retorna lista de todos os estudantes interessados em um projeto específico
+GET {{host}}/interesses/projeto/1
+Authorization: Bearer {{token}}
+
+###
+
+### 29. DELETE /api/interesses/{id}
+### Deletar um interesse/lead (ADMIN ou COORDENADOR)
+### Remove um registro de interesse
+DELETE {{host}}/interesses/1
+Authorization: Bearer {{token}}
+
+###########################################################################
+### VÍNCULOS DE EQUIPE
+###########################################################################
+
+### 30. GET /api/vinculos
+### Listar todos os vínculos de equipe (apenas ADMIN)
+### Retorna lista de todos os membros vinculados a projetos
+GET {{host}}/vinculos
+Authorization: Bearer {{token}}
+
+###
+
+### 31. GET /api/vinculos/{id}
+### Buscar vínculo específico por ID (ADMIN ou COORDENADOR)
+### Retorna dados de um membro de equipe específico
+GET {{host}}/vinculos/1
+Authorization: Bearer {{token}}
+
+###
+
+### 32. GET /api/vinculos/projeto/{projetoId}
+### Listar todos os membros de um projeto (ADMIN ou COORDENADOR)
+### Retorna equipe completa vinculada a um projeto específico
+GET {{host}}/vinculos/projeto/1
+Authorization: Bearer {{token}}
+
+###
+
+### 33. POST /api/vinculos
+### Adicionar membro à equipe de um projeto (ADMIN ou COORDENADOR)
+### Vincula um usuário a um projeto em um papel específico (BOLSISTA, VOLUNTARIO, etc)
+POST {{host}}/vinculos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "idProjeto": 1,
+  "idUsuario": 3,
+  "papel": "BOLSISTA",
+  "ativo": true
+}
+
+###
+
+### 34. PUT /api/vinculos/{id}
+### Atualizar vínculo de equipe (ADMIN ou COORDENADOR)
+### Altera o papel ou status (ativo/inativo) de um membro da equipe
+PUT {{host}}/vinculos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "idProjeto": 1,
+  "idUsuario": 3,
+  "papel": "VOLUNTARIO",
+  "ativo": true
+}
+
+###
+
+### 35. DELETE /api/vinculos/{id}
+### Remover membro da equipe (ADMIN ou COORDENADOR)
+### Desvincula um usuário de um projeto removendo-o da equipe
+DELETE {{host}}/vinculos/1
+Authorization: Bearer {{token}}
+
+###########################################################################
+### NOTAS IMPORTANTES
+###########################################################################
+
+# 1. AUTENTICAÇÃO
+#    - Primeiro execute POST /api/auth/login para obter um token
+#    - Copie o token da resposta e atualize a variável @token no topo
+#    - Use "Authorization: Bearer <seu_token>" para rotas protegidas
+
+# 2. ROLES (Permissões)
+#    - ROLE_ADMIN: Acesso total a toda a plataforma
+#    - ROLE_COORD: Coordenador de projetos - gerencia seus próprios projetos
+#    - ROLE_USER: Usuário comum - pode se inscrever em projetos
+
+# 3. MODELOS DE DADOS
+#    - TipoProjeto: ENSINO, PESQUISA, EXTENSAO
+#    - ModalidadeProjeto: BOLSISTA, VOLUNTARIO, AMBOS
+#    - Papel (Vínculo): BOLSISTA, VOLUNTARIO, ORIENTADOR, COORIENTADOR
+#    - StatusInscricao: PENDENTE, ATIVO, ENCERRADO, REPROVADO
+#    - Vinculo: SERVIDOR, ESTUDANTE
+
+# 4. ENDPOINTS SEM AUTENTICAÇÃO (Públicos)
+#    - GET /api/projetos (listar todos)
+#    - GET /api/projetos/{id} (detalhes de um projeto)
+#    - GET /api/projetos/buscar?texto=... (buscar por texto)
+#    - POST /api/auth/login
+#    - POST /api/auth/register
+
+# 5. SWAGGER UI (Documentação Interativa)
+#    - Acesse em: http://localhost:8080/swagger-ui/index.html
+#    - Permite testar endpoints diretamente pela interface web
+#    - Vê schemas de requisição e resposta automaticamente
+
+# 6. DICAS DE TESTE
+#    - Use datas em formato ISO: YYYY-MM-DD
+#    - Imagens (banner) devem estar em base64 com prefixo "data:image/..."
+#    - Ao testar DELETE, certifique-se que o ID existe
+#    - Para buscar rotas aninhadas, respeite a ordem: {id} antes de /projeto/{projetoId}
+
