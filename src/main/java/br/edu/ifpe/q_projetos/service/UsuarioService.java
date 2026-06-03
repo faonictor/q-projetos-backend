@@ -3,6 +3,7 @@ package br.edu.ifpe.q_projetos.service;
 import br.edu.ifpe.q_projetos.dto.UsuarioCreateDTO;
 import br.edu.ifpe.q_projetos.dto.UsuarioResponseDTO;
 import br.edu.ifpe.q_projetos.dto.UsuarioUpdateDTO;
+import br.edu.ifpe.q_projetos.dto.UsuarioPerfilUpdateDTO;
 import br.edu.ifpe.q_projetos.model.Usuario;
 import br.edu.ifpe.q_projetos.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,13 +88,13 @@ public class UsuarioService {
         boolean isAdmin = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
-        // 2. Se for ADMIN, busca qualquer um
+        
         if (isAdmin) {
             return repository.findById(id).map(this::toResponseDTO)
                     .orElseThrow(() -> new RuntimeException("Usuário não encontrado com o ID solicitado."));
         }
 
-        // 3. Se não for ADMIN, busca o dono da conta
+       
         Usuario logado = repository.findByEmail(emailLogado)
                 .orElseThrow(() -> new RuntimeException("Erro crítico: perfil do usuário logado não encontrado."));
 
@@ -128,18 +129,37 @@ public class UsuarioService {
 
         boolean isDonoDaConta = usuario.getEmail().equals(emailLogado);
 
-        // Apenas admin ou dono da conta
+
         if (!isAdmin && !isDonoDaConta) {
             throw new RuntimeException("Acesso negado: você não tem permissão para editar este perfil.");
         }
 
-        // Atualiza nome
+       
         if (dto.getNome() != null && !dto.getNome().isBlank()) {
             usuario.setNome(dto.getNome());
         }
 
-        // Apenas ADMIN altera role e vínculo
+        // Atualiza e-mail se enviado e valida unicidade
+        if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
+            if (!dto.getEmail().equalsIgnoreCase(usuario.getEmail()) && repository.existsByEmail(dto.getEmail())) {
+                throw new RuntimeException("Este e-mail já está em uso por outro usuário.");
+            }
+            usuario.setEmail(dto.getEmail());
+        }
+
+      
         if (isAdmin) {
+            
+            
+            var vinculoFinal = dto.getVinculo() != null ? dto.getVinculo() : usuario.getVinculo();
+            var roleNova = dto.getRole();
+
+            if (roleNova != null && roleNova.name().equals("ROLE_COORDENADOR")) {
+                if (vinculoFinal == null || !vinculoFinal.name().equals("SERVIDOR")) {
+                    throw new RuntimeException("Operação inválida: Um usuário precisa possuir ou mudar o vínculo para 'Servidor' antes de ser promovido a 'Coordenador'.");
+                }
+            }
+
             if (dto.getRole() != null) {
                 usuario.setRole(dto.getRole());
             }
@@ -159,7 +179,38 @@ public class UsuarioService {
         return toResponseDTO(usuarioAtualizado);
     }
 
-    public void deletarUsuario(Long id) { // Ajustado nome conforme especificação
+   
+    public UsuarioResponseDTO atualizarPerfilLogado(UsuarioPerfilUpdateDTO dto) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth.getName().equals("anonymousUser")) {
+            throw new RuntimeException("Usuário não autenticado.");
+        }
+        
+        String emailLogado = auth.getName();
+
+        Usuario usuario = repository.findByEmail(emailLogado)
+                .orElseThrow(() -> new RuntimeException("Perfil do usuário logado não encontrado no sistema."));
+
+        // Critério: Altera APENAS Nome, E-mail e Senha
+        if (dto.getNome() != null && !dto.getNome().isBlank()) {
+            usuario.setNome(dto.getNome());
+        }
+
+        if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
+            if (!dto.getEmail().equalsIgnoreCase(usuario.getEmail()) && repository.existsByEmail(dto.getEmail())) {
+                throw new RuntimeException("Este e-mail já está em uso por outro usuário.");
+            }
+            usuario.setEmail(dto.getEmail());
+        }
+
+        if (dto.getSenha() != null && !dto.getSenha().isBlank()) {
+            usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
+        }
+
+        return toResponseDTO(repository.save(usuario));
+    }
+
+    public void deletarUsuario(Long id) { 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String emailLogado = auth.getName();
         boolean isAdmin = auth.getAuthorities().stream()
@@ -176,6 +227,10 @@ public class UsuarioService {
 
         repository.deleteById(id);
     }
+
+
+
+
 
     private UsuarioResponseDTO toResponseDTO(Usuario usuario) {
         UsuarioResponseDTO response = new UsuarioResponseDTO();
