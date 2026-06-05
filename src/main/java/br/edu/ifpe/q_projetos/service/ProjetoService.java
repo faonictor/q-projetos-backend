@@ -1,8 +1,11 @@
 package br.edu.ifpe.q_projetos.service;
 
 import br.edu.ifpe.q_projetos.dto.*;
+<<<<<<< HEAD
 import br.edu.ifpe.q_projetos.exception.RegraNegocioException;
 import br.edu.ifpe.q_projetos.exception.RecursoNaoEncontradoException;
+=======
+>>>>>>> 91d5406fee36f0d50f46378e70702fcab9f31dab
 import br.edu.ifpe.q_projetos.model.*;
 import br.edu.ifpe.q_projetos.repository.*;
 import br.edu.ifpe.q_projetos.security.SecurityUtils;

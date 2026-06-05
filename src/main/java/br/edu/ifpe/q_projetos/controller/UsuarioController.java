@@ -12,7 +12,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+<<<<<<< HEAD
 import java.util.List;
+=======
+import br.edu.ifpe.q_projetos.dto.UsuarioCreateDTO;
+import br.edu.ifpe.q_projetos.dto.UsuarioResponseDTO;
+import br.edu.ifpe.q_projetos.dto.UsuarioUpdateDTO;
+import br.edu.ifpe.q_projetos.service.UsuarioService;
+import jakarta.validation.Valid;
+>>>>>>> 91d5406fee36f0d50f46378e70702fcab9f31dab
 
 @RestController
 @RequestMapping("/api/usuarios")

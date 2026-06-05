@@ -16,16 +16,19 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        String errosAgrupados = ex.getBindingResult()
+        Map<String, String> campos = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
-                .map(FieldError::getDefaultMessage)
-                .collect(Collectors.joining(" | "));
+                .collect(Collectors.toMap(
+                        FieldError::getField,
+                        FieldError::getDefaultMessage,
+                        (msg1, msg2) -> msg1 + " | " + msg2
+                ));
 
         Map<String, Object> body = new HashMap<>();
         body.put("status", HttpStatus.BAD_REQUEST.value());
         body.put("error", "Requisição Inválida");
-        body.put("erro", errosAgrupados);
+        body.put("campos", campos);
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }

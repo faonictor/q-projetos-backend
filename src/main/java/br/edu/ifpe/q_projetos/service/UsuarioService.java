@@ -1,11 +1,16 @@
 package br.edu.ifpe.q_projetos.service;
 
 import br.edu.ifpe.q_projetos.dto.UsuarioCreateDTO;
+<<<<<<< HEAD
 import br.edu.ifpe.q_projetos.dto.UsuarioPerfilUpdateDTO;
 import br.edu.ifpe.q_projetos.dto.UsuarioResponseDTO;
 import br.edu.ifpe.q_projetos.dto.UsuarioUpdateDTO;
 import br.edu.ifpe.q_projetos.exception.RegraNegocioException;
 import br.edu.ifpe.q_projetos.exception.RecursoNaoEncontradoException;
+=======
+import br.edu.ifpe.q_projetos.dto.UsuarioResponseDTO;
+import br.edu.ifpe.q_projetos.dto.UsuarioUpdateDTO;
+>>>>>>> 91d5406fee36f0d50f46378e70702fcab9f31dab
 import br.edu.ifpe.q_projetos.model.Usuario;
 import br.edu.ifpe.q_projetos.repository.UsuarioRepository;
 import br.edu.ifpe.q_projetos.security.SecurityUtils;
