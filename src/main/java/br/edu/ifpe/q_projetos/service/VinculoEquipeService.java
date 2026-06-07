@@ -1,105 +1,89 @@
 package br.edu.ifpe.q_projetos.service;
 
-import java.util.List;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-
 import br.edu.ifpe.q_projetos.model.VinculoEquipe;
 import br.edu.ifpe.q_projetos.repository.VinculoEquipeRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class VinculoEquipeService {
 
-        private final VinculoEquipeRepository repository;
+    private final VinculoEquipeRepository repository;
 
-        public VinculoEquipeService(
-                        VinculoEquipeRepository repository) {
-                this.repository = repository;
+    public VinculoEquipeService(
+            VinculoEquipeRepository repository
+    ) {
+        this.repository = repository;
+    }
+
+    public VinculoEquipe salvar(
+            VinculoEquipe vinculo
+    ) {
+
+        boolean existe =
+                repository.existsByIdProjetoAndIdUsuarioAndAtivoTrue(
+                        vinculo.getIdProjeto(),
+                        vinculo.getIdUsuario()
+                );
+
+        if (existe) {
+            throw new RuntimeException(
+                    "Usuário já possui vínculo ativo neste projeto"
+            );
         }
 
-        public VinculoEquipe salvar(
-                        VinculoEquipe vinculo,
-                        Long usuarioLogado) {
+        return repository.save(vinculo);
+    }
 
-                validarCoordenador(
-                                vinculo.getIdProjeto(),
-                                usuarioLogado);
+    public List<VinculoEquipe> listar() {
+        return repository.findAll();
+    }
 
-                return repository.save(vinculo);
-        }
+    public VinculoEquipe buscarPorId(
+            Long id
+    ) {
 
-        public List<VinculoEquipe> listar() {
-                return repository.findAll();
-        }
+        return repository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Vínculo não encontrado"
+                        ));
+    }
 
-        public VinculoEquipe buscarPorId(Long id) {
+    public VinculoEquipe atualizar(
+            Long id,
+            VinculoEquipe vinculoAtualizado
+    ) {
 
-                return repository.findById(id)
-                                .orElseThrow(() -> new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND,
-                                                "Vínculo não encontrado"));
-        }
+        VinculoEquipe vinculo =
+                buscarPorId(id);
 
-        public VinculoEquipe atualizar(
-                        Long id,
-                        VinculoEquipe novo,
-                        Long usuarioLogado) {
+        vinculo.setIdProjeto(
+                vinculoAtualizado.getIdProjeto()
+        );
 
-                validarCoordenador(
-                                novo.getIdProjeto(),
-                                usuarioLogado);
+        vinculo.setIdUsuario(
+                vinculoAtualizado.getIdUsuario()
+        );
 
-                VinculoEquipe vinculo = repository.findById(id)
-                                .orElseThrow(() -> new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND,
-                                                "Vínculo não encontrado"));
+        vinculo.setPapel(
+                vinculoAtualizado.getPapel()
+        );
 
-                vinculo.setPapel(novo.getPapel());
-                vinculo.setAtivo(novo.getAtivo());
+        vinculo.setAtivo(
+                vinculoAtualizado.getAtivo()
+        );
 
-                return repository.save(vinculo);
-        }
+        return repository.save(vinculo);
+    }
 
-        public void deletar(
-                        Long id,
-                        Long usuarioLogado) {
+    public void deletar(
+            Long id
+    ) {
 
-                VinculoEquipe vinculo = repository.findById(id)
-                                .orElseThrow(() -> new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND,
-                                                "Vínculo não encontrado"));
+        buscarPorId(id);
 
-                validarCoordenador(
-                                vinculo.getIdProjeto(),
-                                usuarioLogado);
-
-                repository.deleteById(id);
-        }
-
-        private void validarCoordenador(Long idProjeto, Long usuarioLogado) {
-
-                // 1. Buscamos o vínculo e já "desempacotamos" ou lançamos a exceção se estiver
-                // vazio
-                VinculoEquipe vinculo = repository.findByIdProjetoAndIdUsuario(idProjeto, usuarioLogado)
-                                .orElseThrow(() -> new ResponseStatusException(
-                                                HttpStatus.FORBIDDEN,
-                                                "Usuário sem vínculo no projeto"));
-
-                // 2. Agora que temos a entidade real, podemos acessar os métodos dela
-                // normalmente
-                if (vinculo.getPapel() != VinculoEquipe.Papel.COORDENADOR) {
-                        throw new ResponseStatusException(
-                                        HttpStatus.FORBIDDEN,
-                                        "Apenas coordenadores podem gerenciar membros");
-                }
-
-                // Aproveite para checar se o vínculo está ativo, caso seja necessário
-                if (!Boolean.TRUE.equals(vinculo.getAtivo())) {
-                        throw new ResponseStatusException(
-                                        HttpStatus.FORBIDDEN,
-                                        "Vínculo de coordenação inativo para este projeto");
-                }
-        }
+        repository.deleteById(id);
+    }
 }
