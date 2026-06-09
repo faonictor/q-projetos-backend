@@ -7,6 +7,11 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+/**
+ * DTO de saída para operações com Favoritos
+ * Validação de DTO: Nenhuma entidade Favorito é exposta diretamente
+ * Apenas informações necessárias e seguras são retornadas ao cliente
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

@@ -1,5 +1,6 @@
 package br.edu.ifpe.q_projetos.repository;
 
+import br.edu.ifpe.q_projetos.model.Favorito;
 import br.edu.ifpe.q_projetos.model.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
@@ -11,4 +12,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     // Otimizado para validação de novos cadastros (Evita carregar o objeto inteiro na memória)
     boolean existsByEmail(String email);
+
+    Optional<Favorito> findByUsername(String username);
 }
