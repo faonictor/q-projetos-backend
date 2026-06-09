@@ -61,6 +61,9 @@ public class Projeto {
     @Column(name = "link_edital", length = 500)
     private String linkEdital;
 
+    @Column(name = "link_inscricao_externo", length = 500)
+    private String linkInscricaoExterno;
+
     @Column(nullable = false)
     private Integer vagas;
 

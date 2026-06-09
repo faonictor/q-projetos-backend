@@ -1,6 +1,7 @@
 package br.edu.ifpe.q_projetos.service;
 
 import br.edu.ifpe.q_projetos.dto.*;
+import br.edu.ifpe.q_projetos.exception.RegraNegocioException;
 import br.edu.ifpe.q_projetos.model.*;
 import br.edu.ifpe.q_projetos.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +48,8 @@ public class ProjetoService {
         // 1. Validar cronograma (Regra de Negócio)
         validarDatas(dto.getDataInicio(), dto.getDataTermino(), dto.getDataInicioInscricao(),
                 dto.getDataFimInscricao());
+        validarLinksObrigatorios(dto.getLinkEdital(), dto.getLinkInscricaoExterno());
+        validarBase64(dto.getBanner());
 
         // 2. Criar a entidade Projeto
         Projeto projeto = new Projeto();
@@ -84,8 +87,12 @@ public class ProjetoService {
             projeto.setModalidade(dto.getModalidade());
         if (dto.getLinkEdital() != null)
             projeto.setLinkEdital(dto.getLinkEdital());
-        if (dto.getBanner() != null)
+        if (dto.getLinkInscricaoExterno() != null)
+            projeto.setLinkInscricaoExterno(dto.getLinkInscricaoExterno());
+        if (dto.getBanner() != null) {
+            validarBase64(dto.getBanner());
             projeto.setBanner(dto.getBanner());
+        }
 
         if (dto.getDataInicio() != null)
             projeto.setDataInicio(dto.getDataInicio());
@@ -145,12 +152,33 @@ public class ProjetoService {
 
     // --- MÉTODOS AUXILIARES E REGRAS DE NEGÓCIO ---
 
+
+
+    private void validarBase64(String base64) {
+        if (base64 == null || base64.isBlank()) return;
+
+        if (!base64.startsWith("data:image/")) {
+            throw new RegraNegocioException("Regra de Negócio: Formato de imagem inválido. Deve ser Base64 (data:image/...).");
+        }
+
+        if (base64.length() > 2800000) {
+            throw new RegraNegocioException("Regra de Negócio: O banner excede o tamanho máximo de 2MB.");
+        }
+    }
+
     private void validarDatas(LocalDate inicio, LocalDate fim, LocalDate inscInicio, LocalDate inscFim) {
         if (fim.isBefore(inicio)) {
             throw new RuntimeException("Regra de Negócio: A data de término não pode ser anterior ao início.");
         }
         if (inscFim.isBefore(inscInicio)) {
             throw new RuntimeException("Regra de Negócio: O fim das inscrições não pode ser anterior ao início.");
+        }
+    }
+
+    private void validarLinksObrigatorios(String linkEdital, String linkInscricao) {
+        if ((linkEdital == null || linkEdital.isBlank()) && (linkInscricao == null || linkInscricao.isBlank())) {
+            throw new RegraNegocioException(
+                    "Regra de Negócio: Pelo menos um link (Edital ou Inscrição Externo) deve ser fornecido.");
         }
     }
 
