@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import br.edu.ifpe.q_projetos.dto.ProjetoCreateDTO;
 import br.edu.ifpe.q_projetos.dto.ProjetoResponseDTO;
@@ -65,6 +66,20 @@ public class ProjetoController {
     public void deletar(@PathVariable Long id) {
         service.deletar(id);
     }
+    @PostMapping("/{id}/aprovar")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ProjetoResponseDTO> aprovarProjeto(
+         @PathVariable Long id)
+         {return ResponseEntity.ok(
+            service.aprovarProjeto(id));
+    }
+    @PostMapping("/{id}/reprovar")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ProjetoResponseDTO> reprovarProjeto(
+            @PathVariable Long id)
+            {return ResponseEntity.ok(
+                service.reprovarProjeto(id));
+        }
 
     // --- ENDPOINTS DE BUSCA ---
 
@@ -87,5 +102,9 @@ public class ProjetoController {
         // Como o status agora é dinâmico (não está mais no banco), este endpoint 
         // chamará a lógica correspondente no Service baseada nas datas.
         return ResponseEntity.ok(service.buscarPorStatus(status));
+    }
+    @GetMapping("/meus-projetos")
+    public ResponseEntity<List<ProjetoResponseDTO>> meusProjetos() {
+        return ResponseEntity.ok(service.listarMeusProjetos());
     }
 }

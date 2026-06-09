@@ -71,6 +71,10 @@ public class Projeto {
     @Column(length = 500)
     private String banner;
 
+    @Enumerated(EnumType.STRING)
+    @Column( nullable = false)
+    private StatusModeracao statusModeracao;
+
     public enum TipoProjeto {
         ENSINO,
         PESQUISA,
@@ -81,5 +85,10 @@ public class Projeto {
         BOLSISTA,
         VOLUNTARIO,
         AMBOS
+    }
+    public enum StatusModeracao {
+        PENDENTE,
+        PUBLICADO,
+        REPROVADO
     }
 }

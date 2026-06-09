@@ -42,4 +42,5 @@ public interface ProjetoRepository extends JpaRepository<Projeto, Long> {
             @Param("tipo") TipoProjeto tipo, 
             @Param("hoje") LocalDate hoje
     );
+    List<Projeto> findByIdIn(List<Long> ids);
 }

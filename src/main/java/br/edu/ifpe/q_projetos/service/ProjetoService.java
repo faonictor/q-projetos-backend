@@ -52,6 +52,10 @@ public class ProjetoService {
         Projeto projeto = new Projeto();
         copiarDadosParaEntidade(dto, projeto);
 
+        // RN01 - Todo projeto novo nasce PENDENTE
+        projeto.setStatusModeracao(
+            Projeto.StatusModeracao.PENDENTE);
+            
         // 3. Salvar o Projeto para gerar o ID
         Projeto projetoSalvo = repository.save(projeto);
 
@@ -67,6 +71,14 @@ public class ProjetoService {
     public ProjetoResponseDTO atualizar(Long id, ProjetoUpdateDTO dto) {
         Projeto projeto = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Projeto não encontrado"));
+
+                String tituloAntigo = projeto.getTitulo();
+
+                Projeto.TipoProjeto tipoAntigo = projeto.getTipo();
+
+                Projeto.ModalidadeProjeto modalidadeAntiga = projeto.getModalidade();
+
+
 
         // Validação de Segurança: Somente o coordenador ou ADMIN pode editar
         validarPermissaoEdicao(id);
@@ -91,6 +103,13 @@ public class ProjetoService {
             projeto.setDataInicio(dto.getDataInicio());
         if (dto.getDataTermino() != null)
             projeto.setDataTermino(dto.getDataTermino());
+        if (!tituloAntigo.equals(projeto.getTitulo())
+            || tipoAntigo != projeto.getTipo()
+            || modalidadeAntiga != projeto.getModalidade()) {
+                projeto.setStatusModeracao(
+            Projeto.StatusModeracao.PENDENTE
+    );
+         }
 
         return toResponseDTO(repository.save(projeto));
     }
@@ -103,7 +122,49 @@ public class ProjetoService {
         validarPermissaoEdicao(id);
         repository.deleteById(id);
     }
+    @Transactional
+    public ProjetoResponseDTO aprovarProjeto(Long id) {
+        Projeto projeto = repository.findById(id)
+                .orElseThrow(() -> 
+                new RuntimeException("Projeto não encontrado com o ID: " + id));
 
+    // Validação de Segurança: Somente ADMIN pode aprovar
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isAdmin) {
+            throw new RuntimeException("Acesso negado: Apenas administradores podem aprovar projetos.");
+        }
+
+        projeto.setStatusModeracao(
+            Projeto.StatusModeracao.PUBLICADO);
+        return toResponseDTO(
+            repository.save(projeto));
+    }
+@Transactional
+public ProjetoResponseDTO reprovarProjeto(Long id) {
+
+    Projeto projeto = repository.findById(id)
+            .orElseThrow(() ->
+                    new RuntimeException("Projeto não encontrado com o ID: " + id));
+
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+    boolean isAdmin = auth.getAuthorities().stream()
+            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+    if (!isAdmin) {
+        throw new RuntimeException(
+                "Acesso negado: Apenas administradores podem reprovar projetos.");
+    }
+
+    projeto.setStatusModeracao(
+            Projeto.StatusModeracao.REPROVADO);
+
+    return toResponseDTO(
+            repository.save(projeto));
+}
     // --- BUSCAS ESPECÍFICAS ---
 
     public List<ProjetoResponseDTO> buscarPorTexto(String texto) {
@@ -142,7 +203,20 @@ public class ProjetoService {
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
     }
-
+    public List<ProjetoResponseDTO> listarMeusProjetos() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Usuario logado = usuarioRepository.findByEmail(auth.getName())
+                .orElseThrow(() -> 
+                new RuntimeException("Usuário não encontrado"));
+        List<VinculoEquipe> vinculos = vinculoRepository.findByIdUsuarioAndPapelAndAtivo(logado.getId(), VinculoEquipe.Papel.COORDENADOR, true);
+        List<Long> ids = vinculos.stream()
+                .map(VinculoEquipe::getIdProjeto)
+                .collect(Collectors.toList());
+        List<Projeto> projetos = repository.findByIdIn(ids);
+        return projetos.stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
+    }
     // --- MÉTODOS AUXILIARES E REGRAS DE NEGÓCIO ---
 
     private void validarDatas(LocalDate inicio, LocalDate fim, LocalDate inscInicio, LocalDate inscFim) {
