@@ -103,6 +103,10 @@ public class UsuarioService {
             usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
         }
 
+        if (dto.getAvatar() != null) {
+            usuario.setAvatar(dto.getAvatar());
+        }
+
         return toResponseDTO(repository.save(usuario));
     }
 
@@ -125,6 +129,10 @@ public class UsuarioService {
             usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
         }
 
+        if (dto.getAvatar() != null) {
+            usuario.setAvatar(dto.getAvatar());
+        }
+
         return toResponseDTO(repository.save(usuario));
     }
 
@@ -143,6 +151,7 @@ public class UsuarioService {
                 .email(usuario.getEmail())
                 .role(usuario.getRole())
                 .vinculo(usuario.getVinculo())
+                .avatar(usuario.getAvatar())
                 .build();
     }
 }

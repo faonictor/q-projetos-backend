@@ -25,4 +25,5 @@ public class UsuarioUpdateDTO {
     // Campos sensíveis moderados pelo Admin
     private Role role;
     private Vinculo vinculo;
+    private String avatar;
 }

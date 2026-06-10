@@ -16,4 +16,5 @@ public class UsuarioResponseDTO {
     private String email;
     private Role role;
     private Vinculo vinculo;
+    private String avatar;
 }

@@ -53,6 +53,10 @@ public class Usuario implements UserDetails {
     @Column(nullable = false)
     private Vinculo vinculo;
 
+    @Lob
+    @Column(columnDefinition = "MEDIUMTEXT")
+    private String avatar;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         // O Spring Security espera que as roles comecem com "ROLE_"
