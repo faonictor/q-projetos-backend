@@ -66,6 +66,13 @@ public class InteresseService {
                 .collect(Collectors.toList());
     }
 
+    public List<InteresseResponseDTO> listarMeusInteresses() {
+        String emailLogado = SecurityUtils.getLoggedUserEmail();
+        return repository.findByEmail(emailLogado).stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
     public List<InteresseResponseDTO> listarLeadsPorProjeto(Long projetoId) {
         validarPermissaoAcessoProjeto(projetoId);
         return repository.findByProjetoId(projetoId).stream()
@@ -76,7 +83,14 @@ public class InteresseService {
     public InteresseResponseDTO buscarPorId(Long id) {
         Interesse interesse = repository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Interesse não encontrado."));
-        validarPermissaoAcessoProjeto(interesse.getProjeto().getId());
+        
+        String emailLogado = SecurityUtils.getLoggedUserEmail();
+        
+        // Se não for o dono do interesse, verifica permissão de gestão (Admin ou Coord do Projeto)
+        if (!interesse.getEmail().equalsIgnoreCase(emailLogado)) {
+            validarPermissaoAcessoProjeto(interesse.getProjeto().getId());
+        }
+
         return toResponseDTO(interesse);
     }
 
@@ -84,7 +98,14 @@ public class InteresseService {
     public void deletar(Long id) {
         Interesse interesse = repository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Interesse não encontrado."));
-        validarPermissaoAcessoProjeto(interesse.getProjeto().getId());
+        
+        String emailLogado = SecurityUtils.getLoggedUserEmail();
+
+        // Se não for o dono do interesse, verifica permissão de gestão (Admin ou Coord do Projeto)
+        if (!interesse.getEmail().equalsIgnoreCase(emailLogado)) {
+            validarPermissaoAcessoProjeto(interesse.getProjeto().getId());
+        }
+
         repository.delete(interesse);
     }
 

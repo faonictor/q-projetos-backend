@@ -25,8 +25,14 @@ public class InteresseController {
         return ResponseEntity.ok(service.listarTodos());
     }
 
+    @GetMapping("/meu-historico")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<InteresseResponseDTO>> listarMeusInteresses() {
+        return ResponseEntity.ok(service.listarMeusInteresses());
+    }
+
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'COORD')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<InteresseResponseDTO> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(service.buscarPorId(id));
     }
@@ -46,7 +52,7 @@ public class InteresseController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAnyRole('ADMIN', 'COORD')")
+    @PreAuthorize("isAuthenticated()")
     public void deletar(@PathVariable Long id) {
         service.deletar(id);
     }

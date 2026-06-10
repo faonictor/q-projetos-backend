@@ -28,6 +28,12 @@ public class ProjetoService {
     @Autowired
     private VinculoEquipeRepository vinculoRepository;
 
+    @Autowired
+    private InteresseRepository interesseRepository;
+
+    @Autowired
+    private FavoritoRepository favoritoRepository;
+
     // --- LEITURA ---
 
     public List<ProjetoResponseDTO> listarTodos() {
@@ -141,6 +147,7 @@ public class ProjetoService {
         return toResponseDTO(repository.save(projeto));
     }
 
+    @Transactional
     public void deletar(Long id) {
         validarPermissaoAdmin();
         Projeto projeto = repository.findById(id)
@@ -149,6 +156,11 @@ public class ProjetoService {
         if (!Projeto.StatusModeracao.REPROVADO.equals(projeto.getStatusModeracao())) {
             throw new RegraNegocioException("Regra de Negócio: Somente projetos com status REPROVADO podem ser excluídos.");
         }
+
+        // Limpa dependências antes de excluir o projeto (Evita violação de FK)
+        interesseRepository.deleteByProjetoId(id);
+        favoritoRepository.deleteByIdProjeto(id);
+        vinculoRepository.deleteByIdProjeto(id);
 
         repository.deleteById(id);
     }
