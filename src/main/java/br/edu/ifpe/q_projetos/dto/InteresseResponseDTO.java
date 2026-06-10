@@ -22,4 +22,5 @@ public class InteresseResponseDTO {
     private String modalidadePretendida;
     private Boolean aceitouLgpd;
     private LocalDateTime dataRegistro;
+    private String bannerProjeto;
 }

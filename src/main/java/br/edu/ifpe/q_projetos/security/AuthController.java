@@ -62,4 +62,28 @@ public class AuthController {
         UsuarioResponseDTO usuario = authService.registrar(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(usuario);
     }
+
+    @PostMapping("/recuperar-senha")
+    public ResponseEntity<?> recuperarSenha(@RequestBody Map<String, String> requestBody, jakarta.servlet.http.HttpServletRequest request) {
+        String email = requestBody.get("email");
+        authService.solicitarRecuperacaoSenha(email, request);
+        return ResponseEntity.ok(Map.of("mensagem", "E-mail de recuperação enviado com sucesso."));
+    }
+
+    @org.springframework.web.bind.annotation.GetMapping("/validar-token")
+    public ResponseEntity<?> validarToken(@org.springframework.web.bind.annotation.RequestParam("token") String token) {
+        boolean valido = authService.validarTokenRecuperacao(token);
+        return ResponseEntity.ok(Map.of("valido", valido));
+    }
+
+    @PostMapping("/redefinir-senha")
+    public ResponseEntity<?> redefinirSenha(@RequestBody Map<String, String> requestBody) {
+        String token = requestBody.get("token");
+        String novaSenha = requestBody.get("novaSenha");
+        if (novaSenha == null) {
+            novaSenha = requestBody.get("senha");
+        }
+        authService.redefinirSenha(token, novaSenha);
+        return ResponseEntity.ok(Map.of("mensagem", "Senha redefinida com sucesso."));
+    }
 }

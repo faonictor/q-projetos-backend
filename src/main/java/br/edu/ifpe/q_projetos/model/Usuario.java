@@ -53,6 +53,12 @@ public class Usuario implements UserDetails {
     @Column(nullable = false)
     private Vinculo vinculo;
 
+    @Column
+    private String tokenRecuperacao;
+
+    @Column
+    private java.time.LocalDateTime expiracaoTokenRecuperacao;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         // O Spring Security espera que as roles comecem com "ROLE_"
