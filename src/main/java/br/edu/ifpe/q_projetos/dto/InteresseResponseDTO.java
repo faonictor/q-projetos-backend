@@ -16,6 +16,7 @@ public class InteresseResponseDTO {
     private Long id;
     private Long idProjeto;
     private String tituloProjeto;
+    private String bannerProjeto;
     private String nome;
     private String email;
     private String seriePeriodo;

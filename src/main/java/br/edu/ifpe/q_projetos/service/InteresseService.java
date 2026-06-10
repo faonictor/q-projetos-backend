@@ -136,6 +136,7 @@ public class InteresseService {
                 .id(interesse.getId())
                 .idProjeto(interesse.getProjeto().getId())
                 .tituloProjeto(interesse.getProjeto().getTitulo())
+                .bannerProjeto(interesse.getProjeto().getBanner())
                 .nome(interesse.getNome())
                 .email(interesse.getEmail())
                 .seriePeriodo(interesse.getSeriePeriodo())
