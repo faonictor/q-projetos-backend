@@ -9,5 +9,9 @@ public interface InteresseRepository extends JpaRepository<Interesse, Long> {
 
   List<Interesse> findByProjetoId(Long projetoId);
 
+  List<Interesse> findByEmail(String email);
+
+  void deleteByProjetoId(Long projetoId);
+
   boolean existsByEmailAndProjetoId(String email, Long projetoId);
 }

@@ -12,4 +12,6 @@ public interface VinculoEquipeRepository
     Optional<VinculoEquipe> findByIdProjetoAndIdUsuario(Long idProjeto, Long idUsuario);
 
     java.util.List<VinculoEquipe> findByIdProjeto(Long idProjeto);
+
+    void deleteByIdProjeto(Long idProjeto);
 }
