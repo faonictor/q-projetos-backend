@@ -86,8 +86,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Permite o frontend rodando no Ionic/Angular/React em localhost:8100
-        configuration.setAllowedOrigins(List.of("http://localhost:8100"));
+        // Permite o frontend rodando no Ionic/Angular/React em localhost:8100/4200 e produção
+        configuration.setAllowedOrigins(List.of(
+            "http://localhost:8100",
+            "http://localhost:4200",
+            "https://q-projetos.onrender.com"
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
         configuration.setAllowCredentials(true);

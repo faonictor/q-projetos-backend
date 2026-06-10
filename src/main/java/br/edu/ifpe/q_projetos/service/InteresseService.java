@@ -142,6 +142,7 @@ public class InteresseService {
                 .modalidadePretendida(interesse.getModalidadePretendida())
                 .aceitouLgpd(interesse.getAceitouLgpd())
                 .dataRegistro(interesse.getDataRegistro())
+                .bannerProjeto(interesse.getProjeto().getBanner())
                 .build();
     }
 }

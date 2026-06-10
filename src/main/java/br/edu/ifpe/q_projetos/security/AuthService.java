@@ -60,6 +60,100 @@ public class AuthService implements UserDetailsService {
         return toResponseDTO(usuarioSalvo);
     }
 
+    @Autowired(required = false)
+    private org.springframework.mail.javamail.JavaMailSender mailSender;
+
+    public void solicitarRecuperacaoSenha(String email, jakarta.servlet.http.HttpServletRequest request) {
+        if (email == null || email.isBlank()) {
+            throw new br.edu.ifpe.q_projetos.exception.RegraNegocioException("O e-mail é obrigatório.");
+        }
+
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new br.edu.ifpe.q_projetos.exception.RegraNegocioException(
+                        "Este e-mail não está cadastrado no sistema."));
+
+        String token = java.util.UUID.randomUUID().toString();
+        usuario.setTokenRecuperacao(token);
+        usuario.setExpiracaoTokenRecuperacao(java.time.LocalDateTime.now().plusMinutes(10));
+        usuarioRepository.save(usuario);
+
+        String origin = request.getHeader("Origin");
+        if (origin == null || origin.isBlank()) {
+            origin = "https://q-projetos.onrender.com";
+        }
+        String linkRedefinicao = origin + "/redefinir-senha?token=" + token;
+
+        String serverName = request.getServerName();
+        boolean isLocal = "localhost".equalsIgnoreCase(serverName) || 
+                          "127.0.0.1".equals(serverName) || 
+                          "0:0:0:0:0:0:0:1".equals(serverName);
+
+        if (isLocal) {
+            System.out.println("==================================================");
+            System.out.println("SIMULAÇÃO DE ENVIO DE E-MAIL (LOCALHOST)");
+            System.out.println("Para: " + email);
+            System.out.println("Link de Redefinição: " + linkRedefinicao);
+            System.out.println("==================================================");
+        } else {
+            if (mailSender == null) {
+                throw new br.edu.ifpe.q_projetos.exception.RegraNegocioException(
+                        "Serviço de e-mail não configurado no servidor.");
+            }
+            try {
+                org.springframework.mail.SimpleMailMessage message = new org.springframework.mail.SimpleMailMessage();
+                message.setFrom("no-reply@q-projetos.ifpe.edu.br");
+                message.setTo(email);
+                message.setSubject("Recuperação de Senha - Q-Projetos");
+                message.setText("Olá, " + usuario.getNome() + "!\n\n" +
+                        "Você solicitou a recuperação de sua senha na Plataforma Q-Projetos.\n" +
+                        "Clique no link abaixo para redefinir sua senha. Este link é válido por 10 minutos:\n\n" +
+                        linkRedefinicao + "\n\n" +
+                        "Se você não solicitou esta redefinição, desconsidere este e-mail.");
+                mailSender.send(message);
+            } catch (Exception e) {
+                throw new br.edu.ifpe.q_projetos.exception.RegraNegocioException(
+                        "Erro ao enviar o e-mail de recuperação: " + e.getMessage());
+            }
+        }
+    }
+
+    public boolean validarTokenRecuperacao(String token) {
+        if (token == null || token.isBlank()) {
+            return false;
+        }
+        Usuario usuario = usuarioRepository.findByTokenRecuperacao(token).orElse(null);
+        if (usuario == null) {
+            return false;
+        }
+        if (usuario.getExpiracaoTokenRecuperacao() == null || 
+            usuario.getExpiracaoTokenRecuperacao().isBefore(java.time.LocalDateTime.now())) {
+            return false;
+        }
+        return true;
+    }
+
+    public void redefinirSenha(String token, String novaSenha) {
+        if (token == null || token.isBlank()) {
+            throw new br.edu.ifpe.q_projetos.exception.RegraNegocioException("Token de recuperação inválido.");
+        }
+        if (novaSenha == null || novaSenha.isBlank() || novaSenha.length() < 6) {
+            throw new br.edu.ifpe.q_projetos.exception.RegraNegocioException("A senha deve ter no mínimo 6 caracteres.");
+        }
+
+        Usuario usuario = usuarioRepository.findByTokenRecuperacao(token)
+                .orElseThrow(() -> new br.edu.ifpe.q_projetos.exception.RegraNegocioException("Token de recuperação inválido ou não encontrado."));
+
+        if (usuario.getExpiracaoTokenRecuperacao() == null || 
+            usuario.getExpiracaoTokenRecuperacao().isBefore(java.time.LocalDateTime.now())) {
+            throw new br.edu.ifpe.q_projetos.exception.RegraNegocioException("O token expirou. Solicite a recuperação novamente.");
+        }
+
+        usuario.setSenha(passwordEncoder.encode(novaSenha));
+        usuario.setTokenRecuperacao(null);
+        usuario.setExpiracaoTokenRecuperacao(null);
+        usuarioRepository.save(usuario);
+    }
+
     private UsuarioResponseDTO toResponseDTO(Usuario usuario) {
         UsuarioResponseDTO response = new UsuarioResponseDTO();
         response.setId(usuario.getId());
