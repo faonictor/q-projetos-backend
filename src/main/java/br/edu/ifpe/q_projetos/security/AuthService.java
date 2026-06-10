@@ -60,8 +60,14 @@ public class AuthService implements UserDetailsService {
         return toResponseDTO(usuarioSalvo);
     }
 
-    @Autowired(required = false)
-    private org.springframework.mail.javamail.JavaMailSender mailSender;
+    @org.springframework.beans.factory.annotation.Value("${email.api.provider:resend}")
+    private String emailProvider;
+
+    @org.springframework.beans.factory.annotation.Value("${email.api.key:}")
+    private String emailApiKey;
+
+    @org.springframework.beans.factory.annotation.Value("${email.api.from:onboarding@resend.dev}")
+    private String emailFrom;
 
     public void solicitarRecuperacaoSenha(String email, jakarta.servlet.http.HttpServletRequest request) {
         if (email == null || email.isBlank()) {
@@ -95,26 +101,82 @@ public class AuthService implements UserDetailsService {
             System.out.println("Link de Redefinição: " + linkRedefinicao);
             System.out.println("==================================================");
         } else {
-            if (mailSender == null) {
-                throw new br.edu.ifpe.q_projetos.exception.RegraNegocioException(
-                        "Serviço de e-mail não configurado no servidor.");
-            }
-            try {
-                org.springframework.mail.SimpleMailMessage message = new org.springframework.mail.SimpleMailMessage();
-                message.setFrom("no-reply@q-projetos.ifpe.edu.br");
-                message.setTo(email);
-                message.setSubject("Recuperação de Senha - Q-Projetos");
-                message.setText("Olá, " + usuario.getNome() + "!\n\n" +
-                        "Você solicitou a recuperação de sua senha na Plataforma Q-Projetos.\n" +
-                        "Clique no link abaixo para redefinir sua senha. Este link é válido por 10 minutos:\n\n" +
-                        linkRedefinicao + "\n\n" +
-                        "Se você não solicitou esta redefinição, desconsidere este e-mail.");
-                mailSender.send(message);
-            } catch (Exception e) {
-                throw new br.edu.ifpe.q_projetos.exception.RegraNegocioException(
-                        "Erro ao enviar o e-mail de recuperação: " + e.getMessage());
-            }
+            enviarEmailHttp(email, usuario.getNome(), linkRedefinicao);
         }
+    }
+
+    private void enviarEmailHttp(String emailDestinatario, String nomeDestinatario, String linkRedefinicao) {
+        if (emailApiKey == null || emailApiKey.isBlank()) {
+            throw new br.edu.ifpe.q_projetos.exception.RegraNegocioException(
+                    "API Key de e-mail não configurada no servidor (EMAIL_API_KEY).");
+        }
+
+        String subject = "Recuperacao de Senha - Q-Projetos";
+        String bodyHtml = "<p>Olá, " + nomeDestinatario + "!</p>" +
+                "<p>Você solicitou a recuperação de sua senha na Plataforma Q-Projetos.</p>" +
+                "<p>Clique no link abaixo para redefinir sua senha. Este link é válido por 10 minutos:</p>" +
+                "<p><a href=\"" + linkRedefinicao + "\" style=\"display: inline-block; padding: 10px 20px; background-color: #00b4ff; color: white; text-decoration: none; border-radius: 5px;\">Redefinir Senha</a></p>" +
+                "<p>Se o botão acima não funcionar, copie e cole o link a seguir no seu navegador:</p>" +
+                "<p>" + linkRedefinicao + "</p>" +
+                "<p>Se você não solicitou esta redefinição, desconsidere este e-mail.</p>";
+
+        String provider = emailProvider.toLowerCase().trim();
+        String url;
+        String payload;
+        java.net.http.HttpRequest.Builder requestBuilder = java.net.http.HttpRequest.newBuilder();
+
+        if ("brevo".equals(provider)) {
+            url = "https://api.brevo.com/v3/smtp/email";
+            payload = String.format(
+                "{\"sender\":{\"email\":\"%s\"},\"to\":[{\"email\":\"%s\"}],\"subject\":\"%s\",\"htmlContent\":\"%s\"}",
+                escapeJson(emailFrom), escapeJson(emailDestinatario), escapeJson(subject), escapeJson(bodyHtml)
+            );
+            requestBuilder.header("api-key", emailApiKey);
+        } else if ("sendgrid".equals(provider)) {
+            url = "https://api.sendgrid.com/v3/mail/send";
+            payload = String.format(
+                "{\"personalizations\":[{\"to\":[{\"email\":\"%s\"}]}],\"from\":{\"email\":\"%s\"},\"subject\":\"%s\",\"content\":[{\"type\":\"text/html\",\"value\":\"%s\"}]}",
+                escapeJson(emailDestinatario), escapeJson(emailFrom), escapeJson(subject), escapeJson(bodyHtml)
+            );
+            requestBuilder.header("Authorization", "Bearer " + emailApiKey);
+        } else {
+            // Default to Resend
+            url = "https://api.resend.com/emails";
+            payload = String.format(
+                "{\"from\":\"%s\",\"to\":[\"%s\"],\"subject\":\"%s\",\"html\":\"%s\"}",
+                escapeJson(emailFrom), escapeJson(emailDestinatario), escapeJson(subject), escapeJson(bodyHtml)
+            );
+            requestBuilder.header("Authorization", "Bearer " + emailApiKey);
+        }
+
+        try {
+            java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
+            java.net.http.HttpRequest request = requestBuilder
+                    .uri(java.net.URI.create(url))
+                    .header("Content-Type", "application/json")
+                    .POST(java.net.http.HttpRequest.BodyPublishers.ofString(payload, java.nio.charset.StandardCharsets.UTF_8))
+                    .build();
+
+            java.net.http.HttpResponse<String> response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                throw new RuntimeException("Código de status HTTP: " + response.statusCode() + " - Resposta: " + response.body());
+            }
+        } catch (Exception e) {
+            throw new br.edu.ifpe.q_projetos.exception.RegraNegocioException(
+                    "Erro ao enviar o e-mail de recuperação via API: " + e.getMessage());
+        }
+    }
+
+    private String escapeJson(String input) {
+        if (input == null) return "";
+        return input.replace("\\", "\\\\")
+                    .replace("\"", "\\\"")
+                    .replace("\b", "\\b")
+                    .replace("\f", "\\f")
+                    .replace("\n", "\\n")
+                    .replace("\r", "\\r")
+                    .replace("\t", "\\t");
     }
 
     public boolean validarTokenRecuperacao(String token) {
