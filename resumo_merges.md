@@ -119,7 +119,7 @@ Foram eliminados todos os acoplamentos via `@Autowired` em nível de propriedade
 * **[VinculoEquipeService.java](file:///C:/q-projetos-backend/src/main/java/br/edu/ifpe/q_projetos/service/VinculoEquipeService.java)**
 
 ### 4. Alerta de Versões Desatualizadas no POM (2 problemas)
-* **[pom.xml](file:///C:/q-projetos-backend/pom.xml):** Atualizada a versão do parent do Spring Boot (`spring-boot-starter-parent`) de `4.0.6` para `4.0.7` para resolver os alertas de versão desatualizada (patch release) recomendados pela IDE, garantindo a utilização de bibliotecas com correções de bugs internas do Spring Boot.
+* **[pom.xml](file:///C:/q-projetos-backend/pom.xml):** Atualizada a versão do parent do Spring Boot (`spring-boot-starter-parent`) de `4.0.6` para `4.1.0` para resolver por completo os alertas de versão desatualizada (tanto de patch quanto minor version) indicados no gerenciador de dependências, garantindo a utilização de bibliotecas atualizadas e corrigidas do ecossistema Spring Boot.
 
 ---
 
