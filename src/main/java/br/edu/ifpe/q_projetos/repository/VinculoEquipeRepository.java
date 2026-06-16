@@ -17,4 +17,9 @@ public interface VinculoEquipeRepository
 
     List<VinculoEquipe> findByIdUsuarioAndPapelAndAtivo(
         Long idUsuario, VinculoEquipe.Papel papel, Boolean ativo);
+
+    List<VinculoEquipe> findByIdUsuarioAndPapel(
+            Long idUsuario,
+            VinculoEquipe.Papel papel
+    );
 }
