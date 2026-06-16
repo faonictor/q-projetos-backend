@@ -1,78 +1,145 @@
 package br.edu.ifpe.q_projetos.service;
 
+import br.edu.ifpe.q_projetos.dto.InteresseRequestDTO;
+import br.edu.ifpe.q_projetos.dto.InteresseResponseDTO;
 import br.edu.ifpe.q_projetos.model.Interesse;
+import br.edu.ifpe.q_projetos.model.Projeto;
+import br.edu.ifpe.q_projetos.model.VinculoEquipe;
 import br.edu.ifpe.q_projetos.repository.InteresseRepository;
+import br.edu.ifpe.q_projetos.repository.VinculoEquipeRepository;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
 @Service
 public class InteresseService {
 
-    @Autowired
-    private InteresseRepository repository;
+    private final InteresseRepository repository;
+    private final VinculoEquipeRepository vinculoRepository;
 
-    public Interesse salvar(Interesse interesse) {
+    public InteresseService(
+            InteresseRepository repository,
+            VinculoEquipeRepository vinculoRepository) {
 
-        validarLgpd(interesse);
-
-        return repository.save(interesse);
+        this.repository = repository;
+        this.vinculoRepository = vinculoRepository;
     }
 
-    public List<Interesse> listarTodos() {
-        return repository.findAll();
+    // ✅ SALVAR
+    public InteresseResponseDTO salvar(InteresseRequestDTO dto) {
+
+        validarLgpd(dto.getAceitouLgpd());
+
+        // 🔒 valida unicidade
+        if (repository.existsByEmailAndProjetoId(dto.getEmail(), dto.getIdProjeto())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Já existe um interessado com esse email para este projeto"
+            );
+        }
+
+        Interesse interesse = new Interesse();
+
+        interesse.setNome(dto.getNome());
+        interesse.setEmail(dto.getEmail());
+        interesse.setSeriePeriodo(dto.getSeriePeriodo());
+        interesse.setModalidadePretendida(dto.getModalidadePretendida());
+        interesse.setAceitouLgpd(dto.getAceitouLgpd());
+
+        Projeto projeto = new Projeto();
+        projeto.setId(dto.getIdProjeto());
+        interesse.setProjeto(projeto);
+
+        return toDTO(repository.save(interesse));
     }
 
-    public List<Interesse> listarLeadsPorProjeto(Long projetoId) {
-        return repository.findByProjetoId(projetoId);
+    // ✅ LISTAR (COM SEGURANÇA)
+    public List<InteresseResponseDTO> listarTodos(Long usuarioLogado, boolean isAdmin) {
+
+        List<Interesse> interesses;
+
+        if (isAdmin) {
+            interesses = repository.findAll();
+        } else {
+            List<Long> projetosIds = vinculoRepository
+                    .findByIdUsuarioAndPapel(usuarioLogado, VinculoEquipe.Papel.COORDENADOR)
+                    .stream()
+                    .map(VinculoEquipe::getIdProjeto)
+                    .toList();
+
+            interesses = repository.findByProjetoIdIn(projetosIds);
+        }
+
+        return interesses.stream().map(this::toDTO).toList();
     }
 
-    public Interesse buscarPorId(Long id) {
+    public InteresseResponseDTO buscarPorId(Long id) {
 
-        return repository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Interesse não encontrado."
-                        ));
+        return toDTO(repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Interesse não encontrado"
+                )));
     }
 
-    public Interesse atualizar(Long id, Interesse interesseAtualizado) {
+    // ✅ ATUALIZAR
+    public InteresseResponseDTO atualizar(Long id, InteresseRequestDTO dto) {
 
-        Interesse interesse = buscarPorId(id);
+        Interesse interesse = repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Interesse não encontrado"
+                ));
 
-        interesse.setProjeto(interesseAtualizado.getProjeto());
-        interesse.setNome(interesseAtualizado.getNome());
-        interesse.setEmail(interesseAtualizado.getEmail());
-        interesse.setSeriePeriodo(
-                interesseAtualizado.getSeriePeriodo());
+        validarLgpd(dto.getAceitouLgpd());
 
-        interesse.setModalidadePretendida(
-                interesseAtualizado.getModalidadePretendida());
+        if (repository.existsByEmailAndProjetoId(dto.getEmail(), dto.getIdProjeto())
+                && !interesse.getEmail().equals(dto.getEmail())) {
 
-        interesse.setAceitouLgpd(
-                interesseAtualizado.getAceitouLgpd());
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Já existe um interessado com esse email para este projeto"
+            );
+        }
 
-        validarLgpd(interesse);
+        interesse.setNome(dto.getNome());
+        interesse.setEmail(dto.getEmail());
+        interesse.setSeriePeriodo(dto.getSeriePeriodo());
+        interesse.setModalidadePretendida(dto.getModalidadePretendida());
+        interesse.setAceitouLgpd(dto.getAceitouLgpd());
 
-        return repository.save(interesse);
+        Projeto projeto = new Projeto();
+        projeto.setId(dto.getIdProjeto());
+        interesse.setProjeto(projeto);
+
+        return toDTO(repository.save(interesse));
     }
 
     public void deletar(Long id) {
-
-        Interesse interesse = buscarPorId(id);
-
-        repository.delete(interesse);
+        repository.deleteById(id);
     }
 
-    private void validarLgpd(Interesse interesse) {
+    // 🔄 MAPPER
+    private InteresseResponseDTO toDTO(Interesse i) {
+        return InteresseResponseDTO.builder()
+                .id(i.getId())
+                .idProjeto(i.getProjeto().getId())
+                .nome(i.getNome())
+                .email(i.getEmail())
+                .seriePeriodo(i.getSeriePeriodo())
+                .modalidadePretendida(i.getModalidadePretendida())
+                .dataRegistro(i.getDataRegistro())
+                .build();
+    }
 
-        if (interesse.getAceitouLgpd() == null
-                || !interesse.getAceitouLgpd()) {
-
-            throw new RuntimeException(
-                    "É obrigatório aceitar os termos da LGPD."
+    private void validarLgpd(Boolean aceitou) {
+        if (aceitou == null || !aceitou) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "É obrigatório aceitar os termos da LGPD"
             );
         }
     }

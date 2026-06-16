@@ -7,6 +7,12 @@ import java.util.List;
 
 public interface InteresseRepository extends JpaRepository<Interesse, Long> {
 
-  List<Interesse> findByProjetoId(Long projetoId);
+    // 🔎 já existia (mantém)
+    List<Interesse> findByProjetoId(Long projetoId);
 
+    // 🔒 valida unicidade (email + projeto)
+    boolean existsByEmailAndProjetoId(String email, Long projetoId);
+
+    // 🔐 usado para filtrar projetos do coordenador
+    List<Interesse> findByProjetoIdIn(List<Long> projetosIds);
 }

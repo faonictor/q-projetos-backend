@@ -1,10 +1,10 @@
 package br.edu.ifpe.q_projetos.controller;
 
-import br.edu.ifpe.q_projetos.model.Interesse;
+import br.edu.ifpe.q_projetos.dto.InteresseRequestDTO;
+import br.edu.ifpe.q_projetos.dto.InteresseResponseDTO;
 import br.edu.ifpe.q_projetos.service.InteresseService;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,41 +13,39 @@ import java.util.List;
 @RequestMapping("/api/interesses")
 public class InteresseController {
 
-    @Autowired
-    private InteresseService service;
+    private final InteresseService service;
 
-    @GetMapping
-    public List<Interesse> listarTodos() {
-        return service.listarTodos();
-    }
-
-    @GetMapping("/{id}")
-    public Interesse buscarPorId(@PathVariable("id") Long id) {
-        return service.buscarPorId(id);
+    public InteresseController(InteresseService service) {
+        this.service = service;
     }
 
     @PostMapping
-    public Interesse salvar(@RequestBody Interesse interesse) {
-        return service.salvar(interesse);
+    public InteresseResponseDTO salvar(@RequestBody InteresseRequestDTO dto) {
+        return service.salvar(dto);
+    }
+
+    @PreAuthorize("hasAnyRole('COORD', 'ADMIN')")
+    @GetMapping
+    public List<InteresseResponseDTO> listar(
+            @RequestParam Long usuarioLogado,
+            @RequestParam boolean isAdmin) {
+
+        return service.listarTodos(usuarioLogado, isAdmin);
+    }
+
+    @GetMapping("/{id}")
+    public InteresseResponseDTO buscarPorId(@PathVariable Long id) {
+        return service.buscarPorId(id);
     }
 
     @PutMapping("/{id}")
-    public Interesse atualizar(
+    public InteresseResponseDTO atualizar(
             @PathVariable Long id,
-            @RequestBody Interesse interesse) {
+            @RequestBody InteresseRequestDTO dto) {
 
-        return service.atualizar(id, interesse);
+        return service.atualizar(id, dto);
     }
 
-    @GetMapping("/projeto/{projetoId}")
-    public ResponseEntity<List<Interesse>> listarLeadsPorProjeto(
-            @PathVariable("projetoId") Long projetoId) {
-
-        List<Interesse> leads = service.listarLeadsPorProjeto(projetoId);
-
-        return ResponseEntity.ok(leads);
-    }
-    
     @DeleteMapping("/{id}")
     public void deletar(@PathVariable Long id) {
         service.deletar(id);
