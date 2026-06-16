@@ -1,6 +1,5 @@
 package br.edu.ifpe.q_projetos.repository;
 
-import br.edu.ifpe.q_projetos.model.Favorito;
 import br.edu.ifpe.q_projetos.model.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;

@@ -97,9 +97,10 @@ git checkout -b stage/teste-integracao-equipes stage/teste-integracao
 
 Foi detectada e corrigida uma lista de 38 problemas estáticos e dinâmicos (erros de tempo de execução, bloqueio de testes e warnings severos de acoplamento de código). O detalhamento das correções inclui:
 
-### 1. Inconsistência de Mapeamento no Repositório (2 problemas)
-* **[UsuarioRepository.java](file:///C:/q-projetos-backend/src/main/java/br/edu/ifpe/q_projetos/repository/UsuarioRepository.java):** Removida a assinatura incorreta `Optional<Favorito> findByUsername(String username)`. Por estar declarada num repositório de `Usuario`, a query gerava falhas de coerência de tipos e não era compatível com o domínio.
+### 1. Inconsistência de Mapeamento no Repositório e Limpeza (5 problemas)
+* **[UsuarioRepository.java](file:///C:/q-projetos-backend/src/main/java/br/edu/ifpe/q_projetos/repository/UsuarioRepository.java):** Removida a assinatura incorreta `Optional<Favorito> findByUsername(String username)`. Por estar declarada num repositório de `Usuario`, a query gerava falhas de coerência de tipos e não era compatível com o domínio. Adicionalmente, foi removido o import redundante de `br.edu.ifpe.q_projetos.model.Favorito` que se tornou obsoleto.
 * **[FavoritoService.java](file:///C:/q-projetos-backend/src/main/java/br/edu/ifpe/q_projetos/service/FavoritoService.java):** Modificado o fluxo de recuperação de ID do usuário logado de `findByUsername` para `findByEmail`, utilizando o atributo correspondente correto do banco de dados para recuperar o objeto `Usuario`.
+* **[FavoritoRepository.java](file:///C:/q-projetos-backend/src/main/java/br/edu/ifpe/q_projetos/repository/FavoritoRepository.java) e [ProjetoRepository.java](file:///C:/q-projetos-backend/src/main/java/br/edu/ifpe/q_projetos/repository/ProjetoRepository.java):** Removidas as anotações desnecessárias `@Repository` e seus imports. Como as interfaces estendem `JpaRepository`, a detecção e o registro pelo Spring Data JPA ocorrem de forma automática, tornando as anotações redundantes.
 
 ### 2. Bloqueio no Mapeamento do Contexto de Teste (1 problema)
 * **[QProjetosApplicationTests.java](file:///C:/q-projetos-backend/src/test/java/br/edu/ifpe/q_projetos/QProjetosApplicationTests.java):** Adicionado bloco de inicialização estática (`static initializer`) para forçar o carregamento das variáveis de ambiente usando `Dotenv`. Isso garantiu que os testes de integração do Spring Boot fossem executados sem falha de contexto ao buscar a variável de assinatura do JWT (`JWT_SECRET`).
@@ -116,6 +117,9 @@ Foram eliminados todos os acoplamentos via `@Autowired` em nível de propriedade
 * **[ProjetoService.java](file:///C:/q-projetos-backend/src/main/java/br/edu/ifpe/q_projetos/service/ProjetoService.java)**
 * **[UsuarioService.java](file:///C:/q-projetos-backend/src/main/java/br/edu/ifpe/q_projetos/service/UsuarioService.java)**
 * **[VinculoEquipeService.java](file:///C:/q-projetos-backend/src/main/java/br/edu/ifpe/q_projetos/service/VinculoEquipeService.java)**
+
+### 4. Alerta de Versões Desatualizadas no POM (2 problemas)
+* **[pom.xml](file:///C:/q-projetos-backend/pom.xml):** Atualizada a versão do parent do Spring Boot (`spring-boot-starter-parent`) de `4.0.6` para `4.0.7` para resolver os alertas de versão desatualizada (patch release) recomendados pela IDE, garantindo a utilização de bibliotecas com correções de bugs internas do Spring Boot.
 
 ---
 
