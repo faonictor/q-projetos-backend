@@ -7,7 +7,6 @@ import br.edu.ifpe.q_projetos.exception.RegraNegocioException;
 import br.edu.ifpe.q_projetos.model.*;
 import br.edu.ifpe.q_projetos.repository.*;
 import br.edu.ifpe.q_projetos.security.SecurityUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -19,14 +18,17 @@ import java.util.stream.Collectors;
 @Service
 public class VinculoEquipeService {
 
-    @Autowired
-    private VinculoEquipeRepository repository;
-    
-    @Autowired
-    private ProjetoRepository projetoRepository;
-    
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    private final VinculoEquipeRepository repository;
+    private final ProjetoRepository projetoRepository;
+    private final UsuarioRepository usuarioRepository;
+
+    public VinculoEquipeService(VinculoEquipeRepository repository,
+                                ProjetoRepository projetoRepository,
+                                UsuarioRepository usuarioRepository) {
+        this.repository = repository;
+        this.projetoRepository = projetoRepository;
+        this.usuarioRepository = usuarioRepository;
+    }
 
     @Transactional
     public VinculoEquipeResponseDTO salvar(VinculoEquipeDTO dto) {

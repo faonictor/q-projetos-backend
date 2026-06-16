@@ -2,7 +2,6 @@ package br.edu.ifpe.q_projetos.security;
 
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -25,14 +24,15 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
-    
-    @Autowired
-    private JwtService jwtService;
-    
-    @Autowired
-    private AuthService authService;
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
+    private final AuthService authService;
+
+    public AuthController(AuthenticationManager authenticationManager, JwtService jwtService, AuthService authService) {
+        this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
+        this.authService = authService;
+    }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {

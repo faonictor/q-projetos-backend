@@ -9,7 +9,6 @@ import br.edu.ifpe.q_projetos.exception.RecursoNaoEncontradoException;
 import br.edu.ifpe.q_projetos.model.Usuario;
 import br.edu.ifpe.q_projetos.repository.UsuarioRepository;
 import br.edu.ifpe.q_projetos.security.SecurityUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,11 +20,13 @@ import java.util.stream.Collectors;
 @Service
 public class UsuarioService {
 
-    @Autowired
-    private UsuarioRepository repository;
-    
-    @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
+    private final UsuarioRepository repository;
+    private final BCryptPasswordEncoder passwordEncoder;
+
+    public UsuarioService(UsuarioRepository repository, BCryptPasswordEncoder passwordEncoder) {
+        this.repository = repository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     public UsuarioResponseDTO cadastrarUsuario(UsuarioCreateDTO dto) {
         if (repository.existsByEmail(dto.getEmail())) {

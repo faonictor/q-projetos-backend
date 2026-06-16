@@ -6,7 +6,6 @@ import br.edu.ifpe.q_projetos.exception.RecursoNaoEncontradoException;
 import br.edu.ifpe.q_projetos.model.*;
 import br.edu.ifpe.q_projetos.repository.*;
 import br.edu.ifpe.q_projetos.security.SecurityUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -19,14 +18,18 @@ import java.util.stream.Collectors;
 @Service
 public class ProjetoService {
 
-    @Autowired
-    private ProjetoRepository repository;
-    
-    @Autowired
-    private UsuarioRepository usuarioRepository;
-    
-    @Autowired
-    private VinculoEquipeRepository vinculoRepository;
+    private final ProjetoRepository repository;
+    private final UsuarioRepository usuarioRepository;
+    private final VinculoEquipeRepository vinculoRepository;
+
+    public ProjetoService(
+            ProjetoRepository repository,
+            UsuarioRepository usuarioRepository,
+            VinculoEquipeRepository vinculoRepository) {
+        this.repository = repository;
+        this.usuarioRepository = usuarioRepository;
+        this.vinculoRepository = vinculoRepository;
+    }
 
     // --- LEITURA ---
 

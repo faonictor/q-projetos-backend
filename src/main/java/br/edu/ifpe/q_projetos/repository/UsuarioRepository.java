@@ -12,6 +12,4 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     // Otimizado para validação de novos cadastros (Evita carregar o objeto inteiro na memória)
     boolean existsByEmail(String email);
-
-    Optional<Favorito> findByUsername(String username);
 }

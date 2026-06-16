@@ -139,7 +139,7 @@ public class FavoritoService {
      */
     private Long getLoggedUserId() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return usuarioRepository.findByUsername(username)
+        return usuarioRepository.findByEmail(username)
                 .map(usuario -> usuario.getId())
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado"));
     }

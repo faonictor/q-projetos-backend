@@ -1,6 +1,5 @@
 package br.edu.ifpe.q_projetos.security;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -15,11 +14,13 @@ import br.edu.ifpe.q_projetos.repository.UsuarioRepository;
 @Service
 public class AuthService implements UserDetailsService {
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
-    
-    @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
+    private final UsuarioRepository usuarioRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
+
+    public AuthService(UsuarioRepository usuarioRepository, BCryptPasswordEncoder passwordEncoder) {
+        this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {

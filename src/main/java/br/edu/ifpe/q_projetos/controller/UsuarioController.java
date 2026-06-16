@@ -6,7 +6,6 @@ import br.edu.ifpe.q_projetos.dto.UsuarioResponseDTO;
 import br.edu.ifpe.q_projetos.dto.UsuarioUpdateDTO;
 import br.edu.ifpe.q_projetos.service.UsuarioService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,8 +17,11 @@ import java.util.List;
 @RequestMapping("/api/usuarios")
 public class UsuarioController {
 
-    @Autowired
-    private UsuarioService service;
+    private final UsuarioService service;
+
+    public UsuarioController(UsuarioService service) {
+        this.service = service;
+    }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")

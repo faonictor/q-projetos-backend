@@ -2,7 +2,6 @@ package br.edu.ifpe.q_projetos.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,8 +27,11 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/projetos")
 public class ProjetoController {
 
-    @Autowired
-    private ProjetoService service;
+    private final ProjetoService service;
+
+    public ProjetoController(ProjetoService service) {
+        this.service = service;
+    }
 
     @GetMapping
     public ResponseEntity<List<ProjetoResponseDTO>> listar() {

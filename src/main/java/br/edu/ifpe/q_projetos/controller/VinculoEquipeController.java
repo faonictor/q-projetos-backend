@@ -6,7 +6,6 @@ import br.edu.ifpe.q_projetos.service.VinculoEquipeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,8 +18,11 @@ import java.util.List;
 @Tag(name = "Vínculo Equipe")
 public class VinculoEquipeController {
 
-    @Autowired
-    private VinculoEquipeService service;
+    private final VinculoEquipeService service;
+
+    public VinculoEquipeController(VinculoEquipeService service) {
+        this.service = service;
+    }
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
