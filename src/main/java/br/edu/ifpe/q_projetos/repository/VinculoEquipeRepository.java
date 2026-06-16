@@ -14,4 +14,7 @@ public interface VinculoEquipeRepository
     List<VinculoEquipe> findByIdProjeto(Long idProjeto);
 
     boolean existsByIdProjetoAndIdUsuarioAndAtivoTrue(Long idProjeto, Long idUsuario);
+
+    List<VinculoEquipe> findByIdUsuarioAndPapelAndAtivo(
+        Long idUsuario, VinculoEquipe.Papel papel, Boolean ativo);
 }

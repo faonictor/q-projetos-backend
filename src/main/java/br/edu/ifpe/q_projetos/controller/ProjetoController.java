@@ -1,6 +1,5 @@
 package br.edu.ifpe.q_projetos.controller;
 
-
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;

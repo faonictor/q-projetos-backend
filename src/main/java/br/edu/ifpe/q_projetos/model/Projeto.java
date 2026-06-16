@@ -83,12 +83,6 @@ public class Projeto {
     @Builder.Default
     private StatusModeracao statusModeracao = StatusModeracao.PENDENTE;
 
-    public enum StatusModeracao {
-        PENDENTE,
-        PUBLICADO,
-        REPROVADO
-    }
-
     public enum TipoProjeto {
         ENSINO,
         PESQUISA,
@@ -99,5 +93,11 @@ public class Projeto {
         BOLSISTA,
         VOLUNTARIO,
         AMBOS
+    }
+
+    public enum StatusModeracao {
+        PENDENTE,
+        PUBLICADO,
+        REPROVADO
     }
 }

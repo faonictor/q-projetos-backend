@@ -45,6 +45,8 @@ public interface ProjetoRepository extends JpaRepository<Projeto, Long> {
 
     // Busca projetos onde um usuário específico é o COORDENADOR (via VinculoEquipe)
     @Query("SELECT p FROM Projeto p JOIN VinculoEquipe v ON p.id = v.idProjeto " +
-           "WHERE v.idUsuario = :usuarioId AND v.papel = 'COORDENADOR'")
+           "WHERE v.idUsuario = :usuarioId AND v.papel = 'COORDENADOR' AND v.ativo = true")
     List<Projeto> findProjetosByCoordenador(@Param("usuarioId") Long usuarioId);
+
+    List<Projeto> findByIdIn(List<Long> ids);
 }
