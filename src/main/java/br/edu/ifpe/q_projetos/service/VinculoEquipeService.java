@@ -32,7 +32,7 @@ public class VinculoEquipeService {
     public VinculoEquipeResponseDTO salvar(VinculoEquipeDTO dto) {
         validarCoordenador(dto.getIdProjeto());
 
-        // Regra de Negócio: Um usuário só pode ter 1 papel por projeto
+        // Regra de Negócio: Um usuário só pode ter 1 papel por projeto (respeitando UniqueConstraint no DB)
         if (repository.findByIdProjetoAndIdUsuario(dto.getIdProjeto(), dto.getIdUsuario()).isPresent()) {
             throw new RegraNegocioException("O usuário já possui um vínculo com este projeto. Atualize o vínculo existente se necessário.");
         }
