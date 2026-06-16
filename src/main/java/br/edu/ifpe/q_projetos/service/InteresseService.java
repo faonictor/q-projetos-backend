@@ -2,162 +2,148 @@ package br.edu.ifpe.q_projetos.service;
 
 import br.edu.ifpe.q_projetos.dto.InteresseDTO;
 import br.edu.ifpe.q_projetos.dto.InteresseResponseDTO;
+import br.edu.ifpe.q_projetos.exception.RecursoNaoEncontradoException;
+import br.edu.ifpe.q_projetos.exception.RegraNegocioException;
 import br.edu.ifpe.q_projetos.model.Interesse;
 import br.edu.ifpe.q_projetos.model.Projeto;
+import br.edu.ifpe.q_projetos.model.Usuario;
+import br.edu.ifpe.q_projetos.model.VinculoEquipe;
 import br.edu.ifpe.q_projetos.repository.InteresseRepository;
 import br.edu.ifpe.q_projetos.repository.ProjetoRepository;
-
+import br.edu.ifpe.q_projetos.repository.UsuarioRepository;
+import br.edu.ifpe.q_projetos.repository.VinculoEquipeRepository;
+import br.edu.ifpe.q_projetos.security.SecurityUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class InteresseService {
 
     private final InteresseRepository repository;
     private final ProjetoRepository projetoRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final VinculoEquipeRepository vinculoRepository;
 
     public InteresseService(
             InteresseRepository repository,
-            ProjetoRepository projetoRepository) {
-
+            ProjetoRepository projetoRepository,
+            UsuarioRepository usuarioRepository,
+            VinculoEquipeRepository vinculoRepository) {
         this.repository = repository;
         this.projetoRepository = projetoRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.vinculoRepository = vinculoRepository;
     }
 
-    public InteresseResponseDTO salvar(
-            InteresseDTO dto) {
+    @Transactional
+    public InteresseResponseDTO salvar(InteresseDTO dto) {
+        // RN02: Unicidade de interesse
+        if (repository.existsByEmailAndProjetoId(dto.getEmail(), dto.getProjetoId())) {
+            throw new RegraNegocioException("Regra de Negócio: Você já manifestou interesse neste projeto.");
+        }
 
-        Projeto projeto = projetoRepository
-                .findById(dto.getProjetoId())
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Projeto não encontrado"));
+        validarLgpd(dto.getAceitouLgpd());
+
+        Projeto projeto = projetoRepository.findById(dto.getProjetoId())
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Projeto não encontrado."));
 
         Interesse interesse = new Interesse();
-
         interesse.setProjeto(projeto);
         interesse.setNome(dto.getNome());
         interesse.setEmail(dto.getEmail());
         interesse.setSeriePeriodo(dto.getSeriePeriodo());
-        interesse.setModalidadePretendida(
-                dto.getModalidadePretendida());
-        interesse.setAceitouLgpd(
-                dto.getAceitouLgpd());
+        interesse.setModalidadePretendida(dto.getModalidadePretendida());
+        interesse.setAceitouLgpd(dto.getAceitouLgpd());
 
-        validarLgpd(interesse);
-
-        return converterParaDTO(
-                repository.save(interesse));
+        return toResponseDTO(repository.save(interesse));
     }
 
     public List<InteresseResponseDTO> listarTodos() {
+        SecurityUtils.validarPermissaoAdmin();
+        return repository.findAll().stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
+    }
 
-        return repository.findAll()
-                .stream()
-                .map(this::converterParaDTO)
-                .toList();
+    public List<InteresseResponseDTO> listarLeadsPorProjeto(Long projetoId) {
+        validarPermissaoAcessoProjeto(projetoId);
+        return repository.findByProjetoId(projetoId).stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
     }
 
     public InteresseResponseDTO buscarPorId(Long id) {
-
-        return converterParaDTO(
-                repository.findById(id)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Interesse não encontrado")));
+        Interesse interesse = repository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Interesse não encontrado."));
+        validarPermissaoAcessoProjeto(interesse.getProjeto().getId());
+        return toResponseDTO(interesse);
     }
 
-    public InteresseResponseDTO atualizar(
-            Long id,
-            InteresseDTO dto) {
-
+    @Transactional
+    public InteresseResponseDTO atualizar(Long id, InteresseDTO dto) {
         Interesse interesse = repository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Interesse não encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Interesse não encontrado."));
 
-        Projeto projeto = projetoRepository
-                .findById(dto.getProjetoId())
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Projeto não encontrado"));
+        validarPermissaoAcessoProjeto(interesse.getProjeto().getId());
+        validarLgpd(dto.getAceitouLgpd());
+
+        Projeto projeto = projetoRepository.findById(dto.getProjetoId())
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Projeto não encontrado."));
 
         interesse.setProjeto(projeto);
         interesse.setNome(dto.getNome());
         interesse.setEmail(dto.getEmail());
         interesse.setSeriePeriodo(dto.getSeriePeriodo());
-        interesse.setModalidadePretendida(
-                dto.getModalidadePretendida());
-        interesse.setAceitouLgpd(
-                dto.getAceitouLgpd());
+        interesse.setModalidadePretendida(dto.getModalidadePretendida());
+        interesse.setAceitouLgpd(dto.getAceitouLgpd());
 
-        validarLgpd(interesse);
-
-        return converterParaDTO(
-                repository.save(interesse));
+        return toResponseDTO(repository.save(interesse));
     }
 
-    public List<InteresseResponseDTO>
-            listarLeadsPorProjeto(Long projetoId) {
-
-        return repository.findByProjetoId(projetoId)
-                .stream()
-                .map(this::converterParaDTO)
-                .toList();
-    }
-
+    @Transactional
     public void deletar(Long id) {
-
         Interesse interesse = repository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Interesse não encontrado"));
-
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Interesse não encontrado."));
+        validarPermissaoAcessoProjeto(interesse.getProjeto().getId());
         repository.delete(interesse);
     }
 
-    private void validarLgpd(
-            Interesse interesse) {
-
-        if (interesse.getAceitouLgpd() == null
-                || !interesse.getAceitouLgpd()) {
-
-            throw new RuntimeException(
-                    "É obrigatório aceitar os termos da LGPD.");
+    private void validarLgpd(Boolean aceitou) {
+        if (aceitou == null || !aceitou) {
+            throw new RegraNegocioException("Regra de Negócio: É obrigatório aceitar os termos da LGPD.");
         }
     }
 
-    private InteresseResponseDTO converterParaDTO(
-            Interesse interesse) {
+    private void validarPermissaoAcessoProjeto(Long projetoId) {
+        if (SecurityUtils.isAdmin())
+            return;
 
-        InteresseResponseDTO dto =
-                new InteresseResponseDTO();
+        Usuario logado = SecurityUtils.getLoggedUser(usuarioRepository);
 
-        dto.setId(interesse.getId());
+        // RN05: Restrição de Coordenação Isolada
+        VinculoEquipe vinculo = vinculoRepository.findByIdProjetoAndIdUsuario(projetoId, logado.getId())
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Acesso negado: Você não possui vínculo com este projeto."));
 
-        dto.setProjetoId(
-                interesse.getProjeto().getId());
+        if (!VinculoEquipe.Papel.COORDENADOR.equals(vinculo.getPapel()) &&
+                !VinculoEquipe.Papel.COLABORADOR.equals(vinculo.getPapel())) {
+            throw new RecursoNaoEncontradoException("Acesso negado: Apenas coordenadores ou colaboradores podem visualizar leads.");
+        }
+    }
 
-        dto.setTituloProjeto(
-                interesse.getProjeto().getTitulo());
-
-        dto.setNome(interesse.getNome());
-
-        dto.setEmail(interesse.getEmail());
-
-        dto.setSeriePeriodo(
-                interesse.getSeriePeriodo());
-
-        dto.setModalidadePretendida(
-                interesse.getModalidadePretendida());
-
-        dto.setAceitouLgpd(
-                interesse.getAceitouLgpd());
-
-        dto.setDataRegistro(
-                interesse.getDataRegistro());
-
-        return dto;
+    private InteresseResponseDTO toResponseDTO(Interesse interesse) {
+        return InteresseResponseDTO.builder()
+                .id(interesse.getId())
+                .projetoId(interesse.getProjeto().getId())
+                .tituloProjeto(interesse.getProjeto().getTitulo())
+                .nome(interesse.getNome())
+                .email(interesse.getEmail())
+                .seriePeriodo(interesse.getSeriePeriodo())
+                .modalidadePretendida(interesse.getModalidadePretendida())
+                .aceitouLgpd(interesse.getAceitouLgpd())
+                .dataRegistro(interesse.getDataRegistro())
+                .build();
     }
 }

@@ -10,4 +10,6 @@ public interface VinculoEquipeRepository
         extends JpaRepository<VinculoEquipe, Long> {
 
     Optional<VinculoEquipe> findByIdProjetoAndIdUsuario(Long idProjeto, Long idUsuario);
+
+    java.util.List<VinculoEquipe> findByIdProjeto(Long idProjeto);
 }

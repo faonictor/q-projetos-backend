@@ -11,15 +11,12 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class InteresseResponseDTO {
+public class FavoritoResponseDTO {
 
     private Long id;
-    private Long projetoId;
+    private Long idUsuario;
+    private Long idProjeto;
     private String tituloProjeto;
-    private String nome;
-    private String email;
-    private String seriePeriodo;
-    private String modalidadePretendida;
-    private Boolean aceitouLgpd;
+    private String bannerProjeto;
     private LocalDateTime dataRegistro;
 }

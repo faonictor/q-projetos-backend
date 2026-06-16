@@ -14,37 +14,46 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // 1. Captura erros do @Valid (Resolve o 3º Teste)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        // Pega todos os erros do DTO e junta em uma string amigável
-        String errosAgrupados = ex.getBindingResult()
+        Map<String, String> campos = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
-                .map(FieldError::getDefaultMessage)
-                .collect(Collectors.joining(" | "));
+                .collect(Collectors.toMap(
+                        FieldError::getField,
+                        FieldError::getDefaultMessage,
+                        (msg1, msg2) -> msg1 + " | " + msg2
+                ));
 
         Map<String, Object> body = new HashMap<>();
         body.put("status", HttpStatus.BAD_REQUEST.value());
         body.put("error", "Requisição Inválida");
-        body.put("erro", errosAgrupados); // Mantém a chave "erro" que o seu front já espera
+        body.put("campos", campos);
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
-    // 2. Captura os erros de lógica de negócio (Resolve o 4º Teste)
+    @ExceptionHandler(RegraNegocioException.class)
+    public ResponseEntity<Map<String, String>> handleRegraNegocio(RegraNegocioException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("erro", ex.getMessage()));
+    }
+
+    @ExceptionHandler(RecursoNaoEncontradoException.class)
+    public ResponseEntity<Map<String, String>> handleRecursoNaoEncontrado(RecursoNaoEncontradoException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("erro", ex.getMessage()));
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, String>> handleRuntimeException(RuntimeException ex) {
         String mensagem = ex.getMessage();
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
 
-        // Ajuste na prioridade das checagens de texto
-        if (mensagem.contains("Acesso negado") || mensagem.contains("não encontrado no sistema")) {
-            status = HttpStatus.FORBIDDEN; // 403 - Perfeito para quando não houver usuário logado
-        } else if (mensagem.contains("não encontrado com o ID")) {
-            status = HttpStatus.NOT_FOUND; // 404 - Registro realmente não existe no banco
+        if (mensagem.contains("Acesso negado")) {
+            status = HttpStatus.FORBIDDEN;
+        } else if (mensagem.contains("não encontrado")) {
+            status = HttpStatus.NOT_FOUND;
         } else if (mensagem.contains("Regra de Negócio")) {
-            status = HttpStatus.BAD_REQUEST; // 400 - Validações de e-mail duplicado, etc.
+            status = HttpStatus.BAD_REQUEST;
         }
 
         return ResponseEntity.status(status).body(Map.of("erro", mensagem));

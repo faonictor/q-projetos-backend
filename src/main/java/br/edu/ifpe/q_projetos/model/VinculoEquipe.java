@@ -6,7 +6,9 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "vinculo_equipe")
+@Table(name = "vinculo_equipe", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"id_projeto", "id_usuario"})
+})
 public class VinculoEquipe {
 
     @Id

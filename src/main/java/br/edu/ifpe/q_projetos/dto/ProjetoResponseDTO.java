@@ -26,12 +26,15 @@ public class ProjetoResponseDTO {
     private LocalDate dataInicioInscricao;
     private LocalDate dataFimInscricao;
     private String linkEdital;
+    private String linkInscricaoExterno;
     private Integer vagas;
     private ModalidadeProjeto modalidade;
     private String banner;
     
     // Este campo não existe no banco, mas será calculado no mapeamento
     private StatusInscricao status;
+
+    private br.edu.ifpe.q_projetos.model.Projeto.StatusModeracao statusModeracao;
 
     public enum StatusInscricao {
         ABERTA,

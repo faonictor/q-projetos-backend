@@ -1,105 +1,133 @@
 package br.edu.ifpe.q_projetos.service;
 
-import java.util.List;
-
-import org.springframework.http.HttpStatus;
+import br.edu.ifpe.q_projetos.dto.VinculoEquipeDTO;
+import br.edu.ifpe.q_projetos.dto.VinculoEquipeResponseDTO;
+import br.edu.ifpe.q_projetos.exception.RecursoNaoEncontradoException;
+import br.edu.ifpe.q_projetos.exception.RegraNegocioException;
+import br.edu.ifpe.q_projetos.model.*;
+import br.edu.ifpe.q_projetos.repository.*;
+import br.edu.ifpe.q_projetos.security.SecurityUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.transaction.annotation.Transactional;
 
-import br.edu.ifpe.q_projetos.model.VinculoEquipe;
-import br.edu.ifpe.q_projetos.repository.VinculoEquipeRepository;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class VinculoEquipeService {
 
-        private final VinculoEquipeRepository repository;
+    @Autowired
+    private VinculoEquipeRepository repository;
+    
+    @Autowired
+    private ProjetoRepository projetoRepository;
+    
+    @Autowired
+    private UsuarioRepository usuarioRepository;
 
-        public VinculoEquipeService(
-                        VinculoEquipeRepository repository) {
-                this.repository = repository;
+    @Transactional
+    public VinculoEquipeResponseDTO salvar(VinculoEquipeDTO dto) {
+        validarCoordenador(dto.getIdProjeto());
+
+        // Regra de Negócio: Um usuário só pode ter 1 papel por projeto
+        if (repository.findByIdProjetoAndIdUsuario(dto.getIdProjeto(), dto.getIdUsuario()).isPresent()) {
+            throw new RegraNegocioException("O usuário já possui um vínculo com este projeto. Atualize o vínculo existente se necessário.");
         }
 
-        public VinculoEquipe salvar(
-                        VinculoEquipe vinculo,
-                        Long usuarioLogado) {
+        VinculoEquipe vinculo = new VinculoEquipe();
+        vinculo.setIdProjeto(dto.getIdProjeto());
+        vinculo.setIdUsuario(dto.getIdUsuario());
+        vinculo.setPapel(dto.getPapel());
+        vinculo.setAtivo(dto.getAtivo());
 
-                validarCoordenador(
-                                vinculo.getIdProjeto(),
-                                usuarioLogado);
+        return toResponseDTO(repository.save(vinculo));
+    }
 
-                return repository.save(vinculo);
+    public List<VinculoEquipeResponseDTO> listar() {
+        SecurityUtils.validarPermissaoAdmin();
+        return repository.findAll().stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<VinculoEquipeResponseDTO> listarPorProjeto(Long projetoId) {
+        validarCoordenador(projetoId);
+        return repository.findByIdProjeto(projetoId).stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    public VinculoEquipeResponseDTO buscarPorId(Long id) {
+        VinculoEquipe vinculo = repository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Vínculo não encontrado"));
+        
+        validarCoordenador(vinculo.getIdProjeto());
+        return toResponseDTO(vinculo);
+    }
+
+    @Transactional
+    public VinculoEquipeResponseDTO atualizar(Long id, VinculoEquipeDTO dto) {
+        VinculoEquipe vinculo = repository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Vínculo não encontrado"));
+
+        validarCoordenador(vinculo.getIdProjeto());
+
+        vinculo.setPapel(dto.getPapel());
+        vinculo.setAtivo(dto.getAtivo());
+
+        return toResponseDTO(repository.save(vinculo));
+    }
+
+    @Transactional
+    public void deletar(Long id) {
+        VinculoEquipe vinculo = repository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Vínculo não encontrado"));
+
+        validarCoordenador(vinculo.getIdProjeto());
+        repository.deleteById(id);
+    }
+
+    private void validarCoordenador(Long idProjeto) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth.getName().equals("anonymousUser")) {
+            throw new RegraNegocioException("Acesso negado: Usuário não autenticado.");
         }
 
-        public List<VinculoEquipe> listar() {
-                return repository.findAll();
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        if (isAdmin) return;
+
+        Usuario logado = usuarioRepository.findByEmail(auth.getName())
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário logado não encontrado"));
+
+        VinculoEquipe vinculo = repository.findByIdProjetoAndIdUsuario(idProjeto, logado.getId())
+                .orElseThrow(() -> new RegraNegocioException("Acesso negado: Você não possui vínculo neste projeto"));
+
+        if (!VinculoEquipe.Papel.COORDENADOR.equals(vinculo.getPapel())) {
+            throw new RegraNegocioException("Acesso negado: Apenas coordenadores podem gerenciar membros");
         }
 
-        public VinculoEquipe buscarPorId(Long id) {
-
-                return repository.findById(id)
-                                .orElseThrow(() -> new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND,
-                                                "Vínculo não encontrado"));
+        if (!Boolean.TRUE.equals(vinculo.getAtivo())) {
+            throw new RegraNegocioException("Acesso negado: Seu vínculo de coordenação está inativo");
         }
+    }
 
-        public VinculoEquipe atualizar(
-                        Long id,
-                        VinculoEquipe novo,
-                        Long usuarioLogado) {
+    private VinculoEquipeResponseDTO toResponseDTO(VinculoEquipe vinculo) {
+        Projeto projeto = projetoRepository.findById(vinculo.getIdProjeto()).orElse(null);
+        Usuario usuario = usuarioRepository.findById(vinculo.getIdUsuario()).orElse(null);
 
-                validarCoordenador(
-                                novo.getIdProjeto(),
-                                usuarioLogado);
-
-                VinculoEquipe vinculo = repository.findById(id)
-                                .orElseThrow(() -> new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND,
-                                                "Vínculo não encontrado"));
-
-                vinculo.setPapel(novo.getPapel());
-                vinculo.setAtivo(novo.getAtivo());
-
-                return repository.save(vinculo);
-        }
-
-        public void deletar(
-                        Long id,
-                        Long usuarioLogado) {
-
-                VinculoEquipe vinculo = repository.findById(id)
-                                .orElseThrow(() -> new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND,
-                                                "Vínculo não encontrado"));
-
-                validarCoordenador(
-                                vinculo.getIdProjeto(),
-                                usuarioLogado);
-
-                repository.deleteById(id);
-        }
-
-        private void validarCoordenador(Long idProjeto, Long usuarioLogado) {
-
-                // 1. Buscamos o vínculo e já "desempacotamos" ou lançamos a exceção se estiver
-                // vazio
-                VinculoEquipe vinculo = repository.findByIdProjetoAndIdUsuario(idProjeto, usuarioLogado)
-                                .orElseThrow(() -> new ResponseStatusException(
-                                                HttpStatus.FORBIDDEN,
-                                                "Usuário sem vínculo no projeto"));
-
-                // 2. Agora que temos a entidade real, podemos acessar os métodos dela
-                // normalmente
-                if (vinculo.getPapel() != VinculoEquipe.Papel.COORDENADOR) {
-                        throw new ResponseStatusException(
-                                        HttpStatus.FORBIDDEN,
-                                        "Apenas coordenadores podem gerenciar membros");
-                }
-
-                // Aproveite para checar se o vínculo está ativo, caso seja necessário
-                if (!Boolean.TRUE.equals(vinculo.getAtivo())) {
-                        throw new ResponseStatusException(
-                                        HttpStatus.FORBIDDEN,
-                                        "Vínculo de coordenação inativo para este projeto");
-                }
-        }
+        return VinculoEquipeResponseDTO.builder()
+                .id(vinculo.getId())
+                .idProjeto(vinculo.getIdProjeto())
+                .tituloProjeto(projeto != null ? projeto.getTitulo() : "Projeto não encontrado")
+                .idUsuario(vinculo.getIdUsuario())
+                .nomeUsuario(usuario != null ? usuario.getNome() : "Usuário não encontrado")
+                .emailUsuario(usuario != null ? usuario.getEmail() : null)
+                .papel(vinculo.getPapel())
+                .ativo(vinculo.getAtivo())
+                .build();
+    }
 }

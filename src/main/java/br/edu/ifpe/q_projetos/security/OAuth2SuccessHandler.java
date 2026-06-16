@@ -2,6 +2,7 @@ package br.edu.ifpe.q_projetos.security;
 
 import java.io.IOException;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -17,13 +18,11 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
-    private final UsuarioRepository usuarioRepository;
-    private final JwtService jwtService;
-
-    public OAuth2SuccessHandler(UsuarioRepository usuarioRepository, JwtService jwtService) {
-        this.usuarioRepository = usuarioRepository;
-        this.jwtService = jwtService;
-    }
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+    
+    @Autowired
+    private JwtService jwtService;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,

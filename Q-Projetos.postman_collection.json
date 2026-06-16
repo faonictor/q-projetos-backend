@@ -1,0 +1,668 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-4a5b-bcde-1234567890ab",
+		"name": "Q-Projetos API",
+		"description": "Coleção de rotas para a plataforma Q-Projetos.\n\n### 📌 Guia de Uso e Regras de Negócio\n\n#### 🔐 Segurança e Acesso\n- **Autenticação:** Quase todas as rotas exigem `Bearer Token` (JWT).\n- **Roles:** \n  - `ROLE_ADMIN`: Gestão total, moderação e controle de usuários.\n  - `ROLE_COORD`: Servidores que gerenciam seus próprios projetos.\n  - `ROLE_USER`: Estudantes e usuários comuns (interações básicas).\n\n#### 🏗️ Ciclo de Vida do Projeto\n- Todo projeto nasce como `PENDENTE`.\n- Apenas `ADMIN` pode alterar para `PUBLICADO` ou `REPROVADO`.\n- Alterações em campos estruturais (Título, Tipo, Modalidade) devolvem o projeto para `PENDENTE`.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Login - ADMIN",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@ifpe.edu.br\",\n    \"senha\": \"admin123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "### ⚠️ Informações Importantes\n- **Objetivo:** Obter acesso administrativo.\n- **Regra:** Retorna um Token JWT. Configure este token na variável de ambiente `jwt_token` desta coleção."
+					},
+					"response": []
+				},
+				{
+					"name": "Login - COORDENADOR",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"coordenador@ifpe.edu.br\",\n    \"senha\": \"admin123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "### ⚠️ Informações Importantes\n- **Objetivo:** Acesso para gestão de projetos próprios.\n- **Regra:** O usuário deve possuir a role `ROLE_COORD` previamente atribuída por um Admin."
+					},
+					"response": []
+				},
+				{
+					"name": "Login - ESTUDANTE (Comum)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"estudante@discente.ifpe.edu.br\",\n    \"senha\": \"admin123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "### ⚠️ Informações Importantes\n- **Objetivo:** Acesso para usuários comuns e estudantes.\n- **Regra:** Papel padrão `ROLE_USER`."
+					},
+					"response": []
+				},
+				{
+					"name": "Google OAuth2 (LEIA-ME)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/oauth2/authorization/google",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"oauth2",
+								"authorization",
+								"google"
+							]
+						},
+						"description": "### ⚠️ Informações Importantes\n**ESTA ROTA NÃO FUNCIONA DIRETAMENTE NO POSTMAN.**\n\n**Procedimento:**\n1. Copie o link: `{{base_url}}/oauth2/authorization/google` e cole no seu **Navegador**.\n2. Após o login, você será redirecionado para uma URL contendo `?token=...`.\n3. Copie este token e use-o no Postman para simular o acesso do estudante."
+					},
+					"response": []
+				},
+				{
+					"name": "Register - ADMIN",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Administrador Geral\",\n  \"email\": \"admin@ifpe.edu.br\",\n  \"senha\": \"admin123\",\n  \"role\": \"ROLE_ADMIN\",\n  \"vinculo\": \"SERVIDOR\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"description": "### ⚠️ Informações Importantes\n- **Representação:** Usado para criar o primeiro usuário de teste com poder total.\n- **Segurança:** Em ambiente real, o backend pode forçar `ROLE_USER` para todo novo registro, exigindo ativação manual no banco de dados para o primeiro Admin."
+					},
+					"response": []
+				},
+				{
+					"name": "Register - COORDENADOR",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Professor Coordenador\",\n  \"email\": \"coordenador@ifpe.edu.br\",\n  \"senha\": \"admin123\",\n  \"role\": \"ROLE_USER\",\n  \"vinculo\": \"SERVIDOR\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"description": "### ⚠️ Informações Importantes\n- **Regra Institucional:** Todo cadastro inicial deve ser `ROLE_USER`.\n- **Fluxo:** O servidor se cadastra e solicita a um **Administrador** a elevação de papel para `ROLE_COORD` para que possa gerenciar projetos."
+					},
+					"response": []
+				},
+				{
+					"name": "Register - ESTUDANTE",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Estudante Ativo\",\n  \"email\": \"estudante@discente.ifpe.edu.br\",\n  \"senha\": \"admin123\",\n  \"role\": \"ROLE_USER\",\n  \"vinculo\": \"ESTUDANTE\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"description": "### ⚠️ Informações Importantes\n- **Padrão:** Cadastro comum de estudantes.\n- **Vínculo:** Deve ser preenchido como `ESTUDANTE`."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Projetos",
+			"item": [
+				{
+					"name": "Listar Todos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/projetos",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"projetos"
+							]
+						},
+						"description": "### ⚠️ Informações Importantes\n- **Acesso:** Público (não exige token).\n- **Filtro Implícito:** Geralmente usado pelo front-end para exibir a vitrine de projetos ativos."
+					},
+					"response": []
+				},
+				{
+					"name": "Buscar por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/projetos/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"projetos",
+								"1"
+							]
+						},
+						"description": "### ⚠️ Informações Importantes\n- **Acesso:** Público.\n- **Conteúdo:** Retorna todos os detalhes do projeto, incluindo datas e links."
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Projeto",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"titulo\": \"Novo Projeto de Automação\",\n  \"tipo\": \"PESQUISA\",\n  \"descricao\": \"Estudo de automação industrial\",\n  \"dataInicio\": \"2026-08-01\",\n  \"dataTermino\": \"2027-08-01\",\n  \"dataInicioInscricao\": \"2026-07-01\",\n  \"dataFimInscricao\": \"2026-07-31\",\n  \"linkEdital\": \"https://ifpe.edu.br/edital123\",\n  \"linkInscricaoExterno\": \"https://forms.gle/exemplo\",\n  \"vagas\": 3,\n  \"modalidade\": \"BOLSISTA\",\n  \"banner\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==\",\n  \"idCoordenadorManual\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/projetos",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"projetos"
+							]
+						},
+						"description": "### ⚠️ Informações Importantes\n- **Permissão:** `ROLE_ADMIN` ou `ROLE_COORD`.\n- **Vínculo:** O criador (ou coordenador manual) deve ser um `SERVIDOR`.\n- **Validação de Links:** Ao menos um link (Edital ou Externo) deve estar presente.\n- **Validação de Datas:** O período de inscrição deve estar contido no período do projeto."
+					},
+					"response": []
+				},
+				{
+					"name": "Meus Projetos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/projetos/meus-projetos",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"projetos",
+								"meus-projetos"
+							]
+						},
+						"description": "### ⚠️ Informações Importantes\n- **Acesso:** Privado (Exige Token).\n- **Filtro:** Retorna apenas os projetos onde o usuário logado possui vínculo de Coordenador."
+					},
+					"response": []
+				},
+				{
+					"name": "Aprovar Projeto",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/projetos/1/aprovar",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"projetos",
+								"1",
+								"aprovar"
+							]
+						},
+						"description": "### ⚠️ Informações Importantes\n- **Permissão:** Exclusivo para `ROLE_ADMIN`.\n- **Ação:** Altera o status de moderação para `PUBLICADO`."
+					},
+					"response": []
+				},
+				{
+					"name": "Reprovar Projeto",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/projetos/1/reprovar",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"projetos",
+								"1",
+								"reprovar"
+							]
+						},
+						"description": "### ⚠️ Informações Importantes\n- **Permissão:** Exclusivo para `ROLE_ADMIN`.\n- **Ação:** Altera o status para `REPROVADO`. Necessário para permitir a deleção ou correções pelo coordenador."
+					},
+					"response": []
+				},
+				{
+					"name": "Deletar Projeto",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/projetos/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"projetos",
+								"1"
+							]
+						},
+						"description": "### ⚠️ Informações Importantes\n- **Permissão:** Exclusivo para `ROLE_ADMIN`.\n- **Regra Crítica:** O projeto **DEVE** estar com o status `REPROVADO` para ser excluído. Projetos em outros status (Pendente/Publicado) retornarão erro 400."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Usuarios",
+			"item": [
+				{
+					"name": "Ver Perfil",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/usuarios/perfil",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"usuarios",
+								"perfil"
+							]
+						},
+						"description": "### ⚠️ Informações Importantes\n- **Objetivo:** Consultar dados do usuário autenticado."
+					},
+					"response": []
+				},
+				{
+					"name": "Atualizar Perfil",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Meu Nome Atualizado\",\n  \"email\": \"meuemail@ifpe.edu.br\",\n  \"senha\": \"novasenha123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/usuarios/perfil",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"usuarios",
+								"perfil"
+							]
+						},
+						"description": "### ⚠️ Informações Importantes\n- **Restrição:** Usuário pode alterar apenas Nome, Email e Senha."
+					},
+					"response": []
+				},
+				{
+					"name": "Admin: Listar Usuarios",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/usuarios",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"usuarios"
+							]
+						},
+						"description": "### ⚠️ Informações Importantes\n- **Permissão:** Exclusivo `ROLE_ADMIN`."
+					},
+					"response": []
+				},
+				{
+					"name": "Admin: Atualizar Usuario",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"role\": \"ROLE_COORD\",\n  \"vinculo\": \"SERVIDOR\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/usuarios/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"usuarios",
+								"1"
+							]
+						},
+						"description": "### ⚠️ Informações Importantes\n- **Permissão:** Exclusivo `ROLE_ADMIN`.\n- **Uso:** Fundamental para elevar o papel de um servidor para Coordenador."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Interesses (Leads)",
+			"item": [
+				{
+					"name": "Manifestar Interesse",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"idProjeto\": 1,\n  \"nome\": \"Estudante Ativo\",\n  \"email\": \"estudante@discente.ifpe.edu.br\",\n  \"seriePeriodo\": \"6º Período ADS\",\n  \"modalidadePretendida\": \"BOLSISTA\",\n  \"aceitouLgpd\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/interesses",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"interesses"
+							]
+						},
+						"description": "### ⚠️ Informações Importantes\n- **Regra [RN02]:** Unicidade Usuário-Projeto. Só é permitido manifestar interesse uma vez por projeto.\n- **LGPD:** O campo `aceitouLgpd` deve ser `true` obrigatoriamente."
+					},
+					"response": []
+				},
+				{
+					"name": "Ver Leads por Projeto",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/interesses/projeto/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"interesses",
+								"projeto",
+								"1"
+							]
+						},
+						"description": "### ⚠️ Informações Importantes\n- **Permissão:** Apenas o Coordenador do Projeto ou Administrador."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Favoritos",
+			"item": [
+				{
+					"name": "Adicionar Favorito",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"idProjeto\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/favoritos",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"favoritos"
+							]
+						},
+						"description": "### ⚠️ Informações Importantes\n- **Acesso:** Qualquer usuário logado.\n- **Ação:** Adiciona o projeto à lista de favoritos do usuário."
+					},
+					"response": []
+				},
+				{
+					"name": "Meu Historico (Favoritos)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/favoritos/meu-historico",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"favoritos",
+								"meu-historico"
+							]
+						},
+						"description": "### ⚠️ Informações Importantes\n- **Acesso:** Logado.\n- **Retorno:** Lista de projetos favoritados pelo usuário atual."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Equipe",
+			"item": [
+				{
+					"name": "Adicionar Membro",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"idProjeto\": 1,\n    \"idUsuario\": 3,\n    \"papel\": \"BOLSISTA\",\n    \"ativo\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/vinculos",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"vinculos"
+							]
+						},
+						"description": "### ⚠️ Informações Importantes\n- **Permissão:** Apenas o Coordenador do Projeto.\n- **Regra [RN09]:** Garante que o integrante possua apenas um papel ativo no projeto."
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Membros por Projeto",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/vinculos/projeto/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"vinculos",
+								"projeto",
+								"1"
+							]
+						},
+						"description": "### ⚠️ Informações Importantes\n- **Acesso:** Público.\n- **Objetivo:** Exibir a equipe oficial que compõe o projeto."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{jwt_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token",
+			"value": "seu_token_aqui",
+			"type": "string"
+		}
+	]
+}

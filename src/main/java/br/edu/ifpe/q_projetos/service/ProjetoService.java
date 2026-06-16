@@ -1,8 +1,11 @@
 package br.edu.ifpe.q_projetos.service;
 
 import br.edu.ifpe.q_projetos.dto.*;
+import br.edu.ifpe.q_projetos.exception.RegraNegocioException;
+import br.edu.ifpe.q_projetos.exception.RecursoNaoEncontradoException;
 import br.edu.ifpe.q_projetos.model.*;
 import br.edu.ifpe.q_projetos.repository.*;
+import br.edu.ifpe.q_projetos.security.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,10 +21,10 @@ public class ProjetoService {
 
     @Autowired
     private ProjetoRepository repository;
-
+    
     @Autowired
     private UsuarioRepository usuarioRepository;
-
+    
     @Autowired
     private VinculoEquipeRepository vinculoRepository;
 
@@ -35,7 +38,7 @@ public class ProjetoService {
 
     public ProjetoResponseDTO buscarPorId(Long id) {
         Projeto projeto = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Projeto não encontrado com o ID: " + id));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Projeto não encontrado com o ID: " + id));
         return toResponseDTO(projeto);
     }
 
@@ -44,13 +47,16 @@ public class ProjetoService {
     @Transactional
     public ProjetoResponseDTO salvar(ProjetoCreateDTO dto) {
         validarPermissaoCriacao();
-        // 1. Validar cronograma (Regra de Negócio)
+        // 1. Validar cronograma e links (Regra de Negócio)
         validarDatas(dto.getDataInicio(), dto.getDataTermino(), dto.getDataInicioInscricao(),
                 dto.getDataFimInscricao());
+        validarLinksObrigatorios(dto.getLinkEdital(), dto.getLinkInscricaoExterno());
+        validarBase64(dto.getBanner());
 
         // 2. Criar a entidade Projeto
         Projeto projeto = new Projeto();
         copiarDadosParaEntidade(dto, projeto);
+        projeto.setStatusModeracao(Projeto.StatusModeracao.PENDENTE); // RN01
 
         // 3. Salvar o Projeto para gerar o ID
         Projeto projetoSalvo = repository.save(projeto);
@@ -66,41 +72,84 @@ public class ProjetoService {
     @Transactional
     public ProjetoResponseDTO atualizar(Long id, ProjetoUpdateDTO dto) {
         Projeto projeto = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Projeto não encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Projeto não encontrado"));
 
         // Validação de Segurança: Somente o coordenador ou ADMIN pode editar
         validarPermissaoEdicao(id);
 
+        boolean estruturalAlterado = false;
+
         // Atualização parcial (Patch style)
-        if (dto.getTitulo() != null)
+        if (dto.getTitulo() != null && !dto.getTitulo().equals(projeto.getTitulo())) {
             projeto.setTitulo(dto.getTitulo());
+            estruturalAlterado = true;
+        }
+        if (dto.getTipo() != null && !dto.getTipo().equals(projeto.getTipo())) {
+            projeto.setTipo(dto.getTipo());
+            estruturalAlterado = true;
+        }
+        if (dto.getModalidade() != null && !dto.getModalidade().equals(projeto.getModalidade())) {
+            projeto.setModalidade(dto.getModalidade());
+            estruturalAlterado = true;
+        }
+
         if (dto.getDescricao() != null)
             projeto.setDescricao(dto.getDescricao());
         if (dto.getVagas() != null)
             projeto.setVagas(dto.getVagas());
-        if (dto.getTipo() != null)
-            projeto.setTipo(dto.getTipo());
-        if (dto.getModalidade() != null)
-            projeto.setModalidade(dto.getModalidade());
         if (dto.getLinkEdital() != null)
             projeto.setLinkEdital(dto.getLinkEdital());
-        if (dto.getBanner() != null)
+        if (dto.getLinkInscricaoExterno() != null)
+            projeto.setLinkInscricaoExterno(dto.getLinkInscricaoExterno());
+        if (dto.getBanner() != null) {
+            validarBase64(dto.getBanner());
             projeto.setBanner(dto.getBanner());
+        }
 
         if (dto.getDataInicio() != null)
             projeto.setDataInicio(dto.getDataInicio());
         if (dto.getDataTermino() != null)
             projeto.setDataTermino(dto.getDataTermino());
+        if (dto.getDataInicioInscricao() != null)
+            projeto.setDataInicioInscricao(dto.getDataInicioInscricao());
+        if (dto.getDataFimInscricao() != null)
+            projeto.setDataFimInscricao(dto.getDataFimInscricao());
+
+        // RN12: Alterações em campos estruturais retornam o projeto ao status PENDENTE
+        if (estruturalAlterado) {
+            projeto.setStatusModeracao(Projeto.StatusModeracao.PENDENTE);
+        }
 
         return toResponseDTO(repository.save(projeto));
     }
 
+    @Transactional
+    public ProjetoResponseDTO aprovarProjeto(Long id) {
+        validarPermissaoAdmin();
+        Projeto projeto = repository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Projeto não encontrado"));
+        projeto.setStatusModeracao(Projeto.StatusModeracao.PUBLICADO);
+        return toResponseDTO(repository.save(projeto));
+    }
+
+    @Transactional
+    public ProjetoResponseDTO reprovarProjeto(Long id) {
+        validarPermissaoAdmin();
+        Projeto projeto = repository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Projeto não encontrado"));
+        projeto.setStatusModeracao(Projeto.StatusModeracao.REPROVADO);
+        return toResponseDTO(repository.save(projeto));
+    }
+
     public void deletar(Long id) {
-        if (!repository.existsById(id)) {
-            throw new RuntimeException("Projeto não encontrado com o ID: " + id);
+        validarPermissaoAdmin();
+        Projeto projeto = repository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Projeto não encontrado com o ID: " + id));
+
+        if (!Projeto.StatusModeracao.REPROVADO.equals(projeto.getStatusModeracao())) {
+            throw new RegraNegocioException("Regra de Negócio: Somente projetos com status REPROVADO podem ser excluídos.");
         }
 
-        validarPermissaoEdicao(id);
         repository.deleteById(id);
     }
 
@@ -143,37 +192,76 @@ public class ProjetoService {
                 .collect(Collectors.toList());
     }
 
+    public List<ProjetoResponseDTO> listarMeusProjetos() {
+        Usuario logado = SecurityUtils.getLoggedUser(usuarioRepository);
+        return repository.findProjetosByCoordenador(logado.getId()).stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
     // --- MÉTODOS AUXILIARES E REGRAS DE NEGÓCIO ---
 
     private void validarDatas(LocalDate inicio, LocalDate fim, LocalDate inscInicio, LocalDate inscFim) {
         if (fim.isBefore(inicio)) {
-            throw new RuntimeException("Regra de Negócio: A data de término não pode ser anterior ao início.");
+            throw new RegraNegocioException("Regra de Negócio: A data de término não pode ser anterior ao início.");
         }
         if (inscFim.isBefore(inscInicio)) {
-            throw new RuntimeException("Regra de Negócio: O fim das inscrições não pode ser anterior ao início.");
+            throw new RegraNegocioException("Regra de Negócio: O fim das inscrições não pode ser anterior ao início.");
         }
     }
 
-    private void vincularCoordenador(Long projetoId, Long idCoordenadorManual) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    private void validarLinksObrigatorios(String linkEdital, String linkInscricao) {
+        if ((linkEdital == null || linkEdital.isBlank()) && (linkInscricao == null || linkInscricao.isBlank())) {
+            throw new RegraNegocioException(
+                    "Regra de Negócio: Pelo menos um link (Edital ou Inscrição Externo) deve ser fornecido.");
+        }
+    }
 
-        // Bloqueio rígido: Se cair aqui sem autenticação real, interrompe o processo.
-        if (auth == null || !auth.isAuthenticated() || auth.getName().equals("anonymousUser")) {
-            throw new RuntimeException("Acesso negado: É necessário estar logado para criar um projeto.");
+    private void validarBase64(String base64) {
+        if (base64 == null || base64.isBlank())
+            return;
+
+        if (!base64.startsWith("data:image/")) {
+            throw new RegraNegocioException("Regra de Negócio: Formato de imagem inválido. Deve ser Base64 (data:image/...).");
         }
 
-        Usuario logado = usuarioRepository.findByEmail(auth.getName())
-                .orElseThrow(() -> new RuntimeException("Usuário logado não encontrado no banco de dados."));
+        if (base64.length() > 2800000) {
+            throw new RegraNegocioException("Regra de Negócio: O banner excede o tamanho máximo de 2MB.");
+        }
+    }
+
+    private void copiarDadosParaEntidade(ProjetoCreateDTO dto, Projeto projeto) {
+        projeto.setTitulo(dto.getTitulo());
+        projeto.setTipo(dto.getTipo());
+        projeto.setDescricao(dto.getDescricao());
+        projeto.setDataInicio(dto.getDataInicio());
+        projeto.setDataTermino(dto.getDataTermino());
+        projeto.setDataInicioInscricao(dto.getDataInicioInscricao());
+        projeto.setDataFimInscricao(dto.getDataFimInscricao());
+        projeto.setLinkEdital(dto.getLinkEdital());
+        projeto.setLinkInscricaoExterno(dto.getLinkInscricaoExterno());
+        projeto.setVagas(dto.getVagas());
+        projeto.setModalidade(dto.getModalidade());
+        projeto.setBanner(dto.getBanner());
+    }
+
+    private void vincularCoordenador(Long projetoId, Long idCoordenadorManual) {
+        Usuario logado = SecurityUtils.getLoggedUser(usuarioRepository);
 
         Long idFinalDoCoordenador = logado.getId();
+        Usuario coordenadorFinal = logado;
 
-        // Mantida a lógica de Admin para atribuir o projeto a outra pessoa, caso venha
-        // no DTO
-        boolean isAdmin = auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isAdmin = SecurityUtils.isAdmin();
 
         if (idCoordenadorManual != null && isAdmin) {
             idFinalDoCoordenador = idCoordenadorManual;
+            coordenadorFinal = usuarioRepository.findById(idCoordenadorManual)
+                    .orElseThrow(() -> new RecursoNaoEncontradoException("Coordenador manual não encontrado."));
+        }
+
+        // Validação de Segurança: O coordenador de um projeto DEVE ser um SERVIDOR
+        if (!Usuario.Vinculo.SERVIDOR.equals(coordenadorFinal.getVinculo())) {
+            throw new RegraNegocioException("Regra de Negócio: Apenas usuários com vínculo SERVIDOR podem ser coordenadores de projetos.");
         }
 
         VinculoEquipe vinculo = new VinculoEquipe();
@@ -189,7 +277,7 @@ public class ProjetoService {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth == null || !auth.isAuthenticated() || auth.getName().equals("anonymousUser")) {
-            throw new RuntimeException("Acesso negado: É necessário estar logado para realizar esta ação.");
+            throw new RecursoNaoEncontradoException("Acesso negado: É necessário estar logado para realizar esta ação.");
         }
 
         boolean isAdmin = auth.getAuthorities().stream()
@@ -200,73 +288,43 @@ public class ProjetoService {
         }
 
         Usuario logado = usuarioRepository.findByEmail(auth.getName())
-                .orElseThrow(() -> new RuntimeException("Usuário logado não encontrado no banco de dados."));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário logado não encontrado no banco de dados."));
 
-        // O pulo do gato está aqui: se o repositório retornar vazio, significa que o
-        // USER não é dono/coordenador do projeto
         VinculoEquipe vinculo = vinculoRepository.findByIdProjetoAndIdUsuario(projetoId, logado.getId())
                 .orElseThrow(
-                        () -> new RuntimeException("Acesso negado: Você não possui permissão sobre este projeto."));
+                        () -> new RecursoNaoEncontradoException("Acesso negado: Você não possui permissão sobre este projeto."));
 
         if (!VinculoEquipe.Papel.COORDENADOR.equals(vinculo.getPapel())) {
-            throw new RuntimeException("Acesso negado: Apenas o COORDENADOR possui permissão para alterar o projeto.");
+            throw new RecursoNaoEncontradoException("Acesso negado: Apenas o COORDENADOR possui permissão para alterar o projeto.");
         }
 
         if (!Boolean.TRUE.equals(vinculo.getAtivo())) {
-            throw new RuntimeException("Acesso negado: Seu vínculo com este projeto está inativo.");
+            throw new RecursoNaoEncontradoException("Acesso negado: Seu vínculo com este projeto está inativo.");
         }
     }
 
     private void validarPermissaoCriacao() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Usuario logado = SecurityUtils.getLoggedUser(usuarioRepository);
 
-        // 1. Validação de autenticação básica
-        if (auth == null || !auth.isAuthenticated() || auth.getName().equals("anonymousUser")) {
-            throw new RuntimeException("Acesso negado: É necessário estar logado para realizar esta ação.");
-        }
-
-        // 2. O X da questão: Se for ADMIN, ignora o resto e concede permissão imediata
-        boolean isAdmin = auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-
-        if (isAdmin) {
-            return; // Passa direto
-        }
-
-        // 3. Se não for ADMIN, busca o usuário logado para validar o vínculo
-        // institucional
-        Usuario logado = usuarioRepository.findByEmail(auth.getName())
-                .orElseThrow(() -> new RuntimeException("Usuário logado não encontrado no banco de dados."));
-
-        // 4. Validação do vínculo: Se não for SERVIDOR (por exemplo, se for ESTUDANTE),
-        // o acesso é bloqueado
-        // Nota: Certifique-se de que logado.getVinculo() retorna o Enum ou String com o
-        // valor "SERVIDOR"
-        if (logado.getVinculo() == null || !"SERVIDOR".equalsIgnoreCase(logado.getVinculo().toString())) {
-            throw new RuntimeException(
-                    "Acesso negado: Apenas Administradores ou Servidores possuem permissão para cadastrar projetos.");
+        if (!SecurityUtils.isAdmin()) {
+            if (logado.getVinculo() == null || !"SERVIDOR".equalsIgnoreCase(logado.getVinculo().toString())) {
+                throw new RegraNegocioException(
+                        "Acesso negado: Apenas Administradores ou Servidores possuem permissão para cadastrar projetos.");
+            }
         }
     }
 
-    private void copiarDadosParaEntidade(ProjetoCreateDTO dto, Projeto projeto) {
-        projeto.setTitulo(dto.getTitulo());
-        projeto.setTipo(dto.getTipo());
-        projeto.setDescricao(dto.getDescricao());
-        projeto.setDataInicio(dto.getDataInicio());
-        projeto.setDataTermino(dto.getDataTermino());
-        projeto.setDataInicioInscricao(dto.getDataInicioInscricao());
-        projeto.setDataFimInscricao(dto.getDataFimInscricao());
-        projeto.setLinkEdital(dto.getLinkEdital());
-        projeto.setVagas(dto.getVagas());
-        projeto.setModalidade(dto.getModalidade());
-        projeto.setBanner(dto.getBanner());
+    private void validarPermissaoAdmin() {
+        SecurityUtils.validarPermissaoAdmin();
     }
 
     public ProjetoResponseDTO toResponseDTO(Projeto projeto) {
         LocalDate hoje = LocalDate.now();
         ProjetoResponseDTO.StatusInscricao status;
 
-        if (hoje.isBefore(projeto.getDataInicioInscricao())) {
+        if (projeto.getDataInicioInscricao() == null || projeto.getDataFimInscricao() == null) {
+            status = ProjetoResponseDTO.StatusInscricao.ENCERRADA;
+        } else if (hoje.isBefore(projeto.getDataInicioInscricao())) {
             status = ProjetoResponseDTO.StatusInscricao.AGUARDANDO;
         } else if (hoje.isAfter(projeto.getDataFimInscricao())) {
             status = ProjetoResponseDTO.StatusInscricao.ENCERRADA;
@@ -285,10 +343,12 @@ public class ProjetoService {
                 .dataInicioInscricao(projeto.getDataInicioInscricao())
                 .dataFimInscricao(projeto.getDataFimInscricao())
                 .linkEdital(projeto.getLinkEdital())
+                .linkInscricaoExterno(projeto.getLinkInscricaoExterno())
                 .vagas(projeto.getVagas())
                 .modalidade(projeto.getModalidade())
                 .banner(projeto.getBanner())
                 .status(status)
+                .statusModeracao(projeto.getStatusModeracao())
                 .build();
     }
 }

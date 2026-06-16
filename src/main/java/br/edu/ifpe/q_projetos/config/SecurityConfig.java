@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,6 +14,12 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
+import java.util.List;
 
 // NOTA: Substitua pelos caminhos corretos dos seus filtros e handlers quando criá-los
 import br.edu.ifpe.q_projetos.security.JwtFilter;
@@ -35,22 +42,25 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // 1. Desativação do CSRF (Padrão para APIs REST que utilizam tokens JWT)
+                // 1. Configuração de CORS
+                .cors(Customizer.withDefaults())
+
+                // 2. Desativação do CSRF (Padrão para APIs REST que utilizam tokens JWT)
                 .csrf(csrf -> csrf.disable())
 
-                // 2. Configura a sessão como STATELESS (Sem guardar estado no servidor)
+                // 3. Configura a sessão como STATELESS (Sem guardar estado no servidor)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                // 3. Regras de Autorização de Rotas
+                // 4. Regras de Autorização de Rotas
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/", "/index.html", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/auth/**", "/oauth2/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/projetos/**").permitAll()
                         .requestMatchers("/api/usuarios/**").authenticated()
                         .anyRequest().authenticated()
                 )
 
-                // 4. MODIFICAÇÃO PRINCIPAL: Impede o redirecionamento para a página HTML do Google
+                // 5. MODIFICAÇÃO PRINCIPAL: Impede o redirecionamento para a página HTML do Google
                 // Força a API a devolver status 401 (Unauthorized) quando faltar o token ou ele for inválido
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, authException) -> {
@@ -58,19 +68,33 @@ public class SecurityConfig {
                         })
                 )
 
-                // 5. Configuração do Login Social com Google (OAuth2)
+                // 6. Configuração do Login Social com Google (OAuth2)
                 .oauth2Login(oauth2 -> oauth2
                         .authorizationEndpoint(authorization -> authorization
                                 .baseUri("/oauth2/authorization")
                         )
-                        .successHandler(oAuth2SuccessHandler) 
+                        .successHandler(oAuth2SuccessHandler)
                 );
 
-        // 6. MODIFICAÇÃO PRINCIPAL: Descomentado!
+        // 7. MODIFICAÇÃO PRINCIPAL: Descomentado!
         // O filtro agora está ativo e vai interceptar as requisições para ler e validar o token JWT
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        // Permite o frontend rodando no Ionic/Angular/React em localhost:8100
+        configuration.setAllowedOrigins(List.of("http://localhost:8100"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
+        configuration.setAllowCredentials(true);
+        
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
     @Bean
