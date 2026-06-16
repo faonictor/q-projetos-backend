@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-
+import br.edu.ifpe.q_projetos.dto.UsuarioPerfilUpdateDTO;
 import br.edu.ifpe.q_projetos.dto.UsuarioCreateDTO;
 import br.edu.ifpe.q_projetos.dto.UsuarioResponseDTO;
 import br.edu.ifpe.q_projetos.dto.UsuarioUpdateDTO;
@@ -55,6 +55,14 @@ public class UsuarioController {
         UsuarioResponseDTO atualizado = service.atualizarUsuario(id, dto);
         return ResponseEntity.ok(atualizado);
     }
+
+
+    @PutMapping("/perfil")
+    public ResponseEntity<UsuarioResponseDTO> atualizarMeuPerfil(@Valid @RequestBody UsuarioPerfilUpdateDTO dto) {
+        UsuarioResponseDTO response = service.atualizarPerfilLogado(dto);
+        return ResponseEntity.ok(response);
+    }
+
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
